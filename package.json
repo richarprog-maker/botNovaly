@@ -1,0 +1,47 @@
+{
+    "name": "base-bailey-mysql",
+    "version": "1.0.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "pre-copy": "cd .. && npm run  copy.lib base-baileys-mysql",
+        "start": "node app.js",
+        "dev": "nodemon app.js --watch src --watch .env --ext js,json,env"
+    },
+    "keywords": [],
+    "dependencies": {
+        "@bot-whatsapp/bot": "latest",
+        "@bot-whatsapp/cli": "latest",
+        "@bot-whatsapp/database": "latest",
+        "@bot-whatsapp/portal": "latest",
+        "@bot-whatsapp/provider": "latest",
+        "@types/node-fetch": "^2.6.11",
+        "@whiskeysockets/baileys": "^6.4.0",
+        "bcrypt": "^5.1.1",
+        "bot-ws-plugin-openai": "^1.0.5",
+        "bull": "^4.11.2",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "express-handlebars": "^7.1.2",
+        "fluent-ffmpeg": "^2.1.2",
+        "jsonwebtoken": "^9.0.2",
+        "luxon": "^3.5.0",
+        "mime-types": "2.1.35",
+        "music-metadata": "^10.3.1",
+        "mysql2": "^2.3.3",
+        "node-cron": "^3.0.3",
+        "openai": "^4.80.1",
+        "pm2": "^5.3.0",
+        "request": "^2.88.2",
+        "sharp": "^0.30.7",
+        "uuidv4": "^6.2.13",
+        "wa-sticker-formatter": "4.4.4"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.3"
+    },
+    "author": "",
+    "license": "ISC"
+}

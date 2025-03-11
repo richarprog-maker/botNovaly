@@ -1,0 +1,51 @@
+[
+  {
+    "id": 1,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Desenlante y Enllante de Neumáticos",
+    "descripcion": "Incluye el desenlante y enllante de los cuatro neumáticos",
+    "precio": "Cotizar"
+  },
+  {
+    "id": 2,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Balanceo y Rotación de Neumáticos",
+    "descripcion": "Incluye el balanceo de los 4 neumáticos del vehículo",
+    "precio": "Cotizar"
+  },
+  {
+    "id": 3,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Parchado de Llanta",
+    "descripcion": "Desenlante y enllante - parchado del neumático",
+    "precio": "Cotizar"
+  },
+  {
+    "id": 6,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Alineamiento de Dirección Computarizado 3D",
+    "descripcion": "Corrección de ángulos de dirección",
+    "precio": "Cotizar"
+  },
+  {
+    "id": 7,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Cambio Filtro Aire de Motor",
+    "descripcion": "Desmontaje y montaje de filtro de aire del motor",
+    "precio": "Cotizar"
+  },
+  {
+    "id": 8,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Cambio Filtro Aire Acondicionado",
+    "descripcion": "Desmontaje y montaje de filtro de aire acondicionado",
+    "precio": "Cotizar"
+  },
+  {
+    "id": 9,
+    "categoria": "SERVICIOS DE MANTENIENTO Y REPARACIÓN",
+    "servicio": "Servicio Cambio Filtro de Combustible",
+    "descripcion": "Desmontaje y montaje del filtro de combustible",
+    "precio": "Cotizar"
+  }
+]

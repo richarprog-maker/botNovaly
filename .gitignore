@@ -1,0 +1,6 @@
+node_modules
+bot_sessions
+bot_sessions/baileys_store.json
+db.json
+*.log
+bot.qr.png

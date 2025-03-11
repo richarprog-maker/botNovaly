@@ -1,0 +1,267 @@
+[
+    {
+      "Nro": 1,
+      "Distrito": "Cieneguilla",
+      "OpcionTienda1": "La Molina",
+      "OpcionTienda2": "Santa Anita"
+    },
+    {
+      "Nro": 2,
+      "Distrito": "La Molina",
+      "OpcionTienda1": "La Molina",
+      "OpcionTienda2": "Santa Anita"
+    },
+    {
+      "Nro": 3,
+      "Distrito": "Ancón",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 4,
+      "Distrito": "Carabayllo",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 5,
+      "Distrito": "Comas",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 6,
+      "Distrito": "Independencia",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 7,
+      "Distrito": "Los Olivos",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 8,
+      "Distrito": "Puente Piedra",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 9,
+      "Distrito": "San Martín de Porres",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 10,
+      "Distrito": "Santa Rosa",
+      "OpcionTienda1": "Los Olivos",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 11,
+      "Distrito": "Breña",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 12,
+      "Distrito": "Jesús María",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 13,
+      "Distrito": "Lince",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 14,
+      "Distrito": "Magdalena del Mar",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 15,
+      "Distrito": "Pueblo Libre",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 16,
+      "Distrito": "San Isidro",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": "Surco"
+    },
+    {
+      "Nro": 17,
+      "Distrito": "San Miguel",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": "San Miguel"
+    },
+    {
+      "Nro": 18,
+      "Distrito": "Rímac",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "San Miguel"
+    },
+    {
+      "Nro": 19,
+      "Distrito": "Ate",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 20,
+      "Distrito": "Chaclacayo",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 21,
+      "Distrito": "Huaycán (Comunidad)",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 22,
+      "Distrito": "Lurigancho",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 23,
+      "Distrito": "San Juan de Lurigancho",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 24,
+      "Distrito": "San Luis",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "Surco"
+    },
+    {
+      "Nro": 25,
+      "Distrito": "Santa Anita",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 26,
+      "Distrito": "Barranco",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": "Surco"
+    },
+    {
+      "Nro": 27,
+      "Distrito": "La Victoria",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 28,
+      "Distrito": "Lima",
+      "OpcionTienda1": "San Miguel",
+      "OpcionTienda2": "Surco"
+    },
+    {
+      "Nro": 29,
+      "Distrito": "Miraflores",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": "San Miguel"
+    },
+    {
+      "Nro": 30,
+      "Distrito": "San Borja",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 31,
+      "Distrito": "Santiago de Surco",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": "La Molina"
+    },
+    {
+      "Nro": 32,
+      "Distrito": "Surquillo",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": "San Miguel"
+    },
+    {
+      "Nro": 33,
+      "Distrito": "El Agustino",
+      "OpcionTienda1": "Santa Anita",
+      "OpcionTienda2": "Surco"
+    },
+    {
+      "Nro": 34,
+      "Distrito": "Chorrillos",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 35,
+      "Distrito": "Lurín",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 36,
+      "Distrito": "Pachacamac",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 37,
+      "Distrito": "Pucusana",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 38,
+      "Distrito": "Punta Hermosa",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 39,
+      "Distrito": "Punta Negra",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 40,
+      "Distrito": "San Bartolo",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 41,
+      "Distrito": "San Juan de Miraflores",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 42,
+      "Distrito": "Santa María del Mar",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 43,
+      "Distrito": "Villa El Salvador",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    },
+    {
+      "Nro": 44,
+      "Distrito": "Villa María del Triunfo",
+      "OpcionTienda1": "Surco",
+      "OpcionTienda2": null
+    }
+  ]
+  
