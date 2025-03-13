@@ -4,6 +4,7 @@ const {
   guardarCliente, guardarCita
 } = require('../flujos/citas/db/appointmentDB.js');
 const { obtenerFechaHoraActual } = require('../flujos/citas/validacionesFechaHora.js');
+const { getConversationFlowsText } = require('../../model/conversationFlows.js');
 
 const conversationState = new Map();
 
@@ -20,10 +21,33 @@ function getOrCreateConversationState(sender) {
 async function processWithOpenAI(message, sender, nombreCliente) {
   const state = getOrCreateConversationState(sender);
   const clienteYaRegistrado = await clienteExiste(sender);
+  let promptDatosRegistro = '';
+  if (clienteYaRegistrado) {
+    promptDatosRegistro = ` 
+    Cita confirmada:
+    {
+      "fecha": "",
+      "hora": "",
+      "tipoReunion": ""
+    }
+    `
+  } else {
+    promptDatosRegistro = ` 
+    Cita confirmada:
+    {
+      "nombre": "",
+      "apellidos": "",
+      "correo": "",
+      "fecha": "",
+      "hora": "",
+      "empresa": "",
+      "tipoReunion": ""
+    }
+    `
+  }
   const fechaHoraActual = obtenerFechaHoraActual();
   const fechaActualISO = `${fechaHoraActual.año}-${String(fechaHoraActual.mes).padStart(2, '0')}-${String(fechaHoraActual.dia).padStart(2, '0')}`;
   const hora = `${fechaHoraActual.hora}:${fechaHoraActual.minuto}`;
-
 
   const systemPrompt = `
 Eres Valeria, asistente virtual de Novaly, experta en atención al cliente de un servicio de TI.
@@ -46,56 +70,11 @@ Eres Valeria, asistente virtual de Novaly, experta en atención al cliente de un
 🔹 Cumplimos con normativas de seguridad digital.
 🔹 Accesos controlados para evitar filtraciones.
 
-**Flujos de conversación:**
+${getConversationFlowsText()}
 
-1. SALUDO INICIAL:
-   - Si el cliente saluda, preséntate como Valeria y pregunta su nombre.
-   - Si el cliente proporciona su nombre, usa ese nombre en tus respuestas.
-   - Si el cliente no desea dar su nombre, continúa sin problema.
-
-2. CONSULTA SOBRE SERVICIOS Y PRECIOS:
-   - Presenta los servicios de Novaly con sus emojis correspondientes.
-   - Menciona que los precios dependen del nivel de personalización.
-   - Ofrece agendar una reunión para analizar opciones.
-
-3. CONSULTA ESPECÍFICA DE PRECIOS:
-   - Menciona las opciones modulares desde 59 dólares mensuales.
-   - Explica que hay opciones personalizadas según necesidades.
-   - Sugiere agendar una reunión para cotización precisa.
-
-4. CONSULTA SOBRE SERVICIOS ESPECÍFICOS:
-   - Proporciona detalles sobre el servicio consultado.
-   - Explica los beneficios (centralización, reducción de tiempo, etc).
-   - Menciona casos de éxito si es relevante.
-
-5. CONSULTA SOBRE SEGURIDAD:
-   - Asegura que las soluciones cumplen con normativas de seguridad.
-   - Menciona las medidas de protección implementadas.
-   - Ofrece más información en una reunión.
-
-6. SOLICITUD DE DEMO:
-   - Confirma la posibilidad de una demo.
-   - Sugiere agendar una cita para coordinarla.
-
-**Al confirmar citas devuelve JSON exactamente así:**
-Cita confirmada:
-{
-  "nombre": "",
-  "apellidos": "",
-  "correo": "",
-  "fecha": "",
-  "hora": "",
-  "empresa": ""
-}
-
-Al recibir datos adicionales (parciales o preferencias), responde así:
-Datos adicionales recibidos:
-{
-  "marca": "Toyota",
-  "modelo": "Corolla",
-  "placa": "ABC-123",
-  "color": "Rojo"
-}
+**Al confirmar citas, incluye la información en formato JSON al final del mensaje, precedida por "===CITA_JSON===":*
+===CITA_JSON===
+${promptDatosRegistro}
 `.trim();
 
   const messagesForOpenAI = [
@@ -105,19 +84,23 @@ Datos adicionales recibidos:
   ];
 
   const response = await getOpenAIResponse(messagesForOpenAI);
-  const cleanResponse = response.trim();
+  let cleanResponse = response.trim();
 
-  state.messages.push({ role: "user", content: message });
-  state.messages.push({ role: "assistant", content: cleanResponse });
-  if (state.messages.length > 10) state.messages = state.messages.slice(-10);
+  // Detectar el marcador "===CITA_JSON==="
+  const citaMarker = "===CITA_JSON===";
+  const citaIndex = cleanResponse.indexOf(citaMarker);
+  if (citaIndex !== -1) {
+    // Extraer el JSON
+    const jsonStart = citaIndex + citaMarker.length;
+    const jsonString = cleanResponse.substring(jsonStart).trim();
+    try {
+      // Buscar el objeto JSON real dentro del texto
+      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No se encontró un objeto JSON válido");
+      }
 
-  if (cleanResponse.includes("Cita confirmada:")) {
-    const citaRegex = /Cita confirmada:\s*(\{[\s\S]*?\})/;
-    const matchCita = cleanResponse.match(citaRegex);
-
-    if (matchCita) {
-      const datosCita = JSON.parse(matchCita[1]);
-
+      const datosCita = JSON.parse(jsonMatch[0]);
       let clienteId;
 
       if (!clienteYaRegistrado) {
@@ -133,18 +116,44 @@ Datos adicionales recibidos:
         clienteId = clienteExistente.cliente_id;
       }
 
+      // Determinar el tipo de reunión (1=virtual, 2=presencial)
+      let tipoReunionId = 1; // Por defecto virtual
+      if (datosCita.tipoReunion) {
+        const tipoReunion = datosCita.tipoReunion.toLowerCase();
+        if (tipoReunion.includes('presencial') || tipoReunion === '2') {
+          tipoReunionId = 2;
+        } else if (tipoReunion.includes('virtual') || tipoReunion === '1') {
+          tipoReunionId = 1;
+          // Agregar información de horario para reuniones virtuales
+          // cleanResponse = cleanResponse.substring(0, citaIndex).trim();
+        }
+      }
+
       await guardarCita({
         cliente_id: clienteId,
         asesor_id: datosCita.asesorId || 1,
-        tiporeunion_id: 1,
+        tiporeunion_id: tipoReunionId,
         fecha_reunion: datosCita.fecha,
         hora_reunion: datosCita.hora,
         direccion: datosCita.tienda || 'Lima'
       });
 
-      state.datosCita = {};
+      // Eliminar la parte del JSON de la respuesta si no se ha hecho ya
+      if (!tipoReunionId === 1) {
+        cleanResponse = cleanResponse.substring(0, citaIndex).trim();
+      }
+
+      // cleanResponse += `\n¡Tu cita ha sido confirmada para el ${datosCita.fecha} a las ${datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
+      cleanResponse += `\nNos pondremos en contacto contigo pronto.`;
+    } catch (error) {
+      console.error("Error al parsear JSON o guardar cita:", error);
+      cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nLo siento, hubo un problema al confirmar tu cita. Por favor, intenta de nuevo más tarde.";
     }
   }
+
+  state.messages.push({ role: "user", content: message });
+  state.messages.push({ role: "assistant", content: cleanResponse });
+  if (state.messages.length > 10) state.messages = state.messages.slice(-10);
 
   return cleanResponse;
 }
