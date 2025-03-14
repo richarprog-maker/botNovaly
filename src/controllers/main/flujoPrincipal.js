@@ -11,7 +11,7 @@ const conversationState = new Map();
 function getOrCreateConversationState(sender) {
   let state = conversationState.get(sender);
   if (!state) {
-    state = { data: {}, lastUpdated: Date.now(), messages: [], datosCita: {} };
+    state = { data: {}, lastUpdated: Date.now(), messages: [], datosCita: {}, citaGuardada: false };
     conversationState.set(sender, state);
   }
   state.lastUpdated = Date.now();
@@ -72,9 +72,9 @@ Eres Valeria, asistente virtual de Novaly, experta en atención al cliente de un
 
 ${getConversationFlowsText()}
 
-**Al confirmar citas, incluye la información en formato JSON al final del mensaje, precedida por "===CITA_JSON===":*
+${state.citaGuardada ? '**Nota: Ya has agendado una cita. Si necesitas otra cita o modificar la existente, por favor indícalo claramente.**' : `**Al confirmar citas, incluye la información en formato JSON al final del mensaje, precedida por "===CITA_JSON===":*
 ===CITA_JSON===
-${promptDatosRegistro}
+${promptDatosRegistro}`}
 `.trim();
 
   const messagesForOpenAI = [
@@ -89,12 +89,11 @@ ${promptDatosRegistro}
   // Detectar el marcador "===CITA_JSON==="
   const citaMarker = "===CITA_JSON===";
   const citaIndex = cleanResponse.indexOf(citaMarker);
-  if (citaIndex !== -1) {
+  if (citaIndex !== -1 && !state.citaGuardada) {
     // Extraer el JSON
     const jsonStart = citaIndex + citaMarker.length;
     const jsonString = cleanResponse.substring(jsonStart).trim();
     try {
-      // Buscar el objeto JSON real dentro del texto
       const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error("No se encontró un objeto JSON válido");
@@ -116,7 +115,6 @@ ${promptDatosRegistro}
         clienteId = clienteExistente.cliente_id;
       }
 
-      // Determinar el tipo de reunión (1=virtual, 2=presencial)
       let tipoReunionId = 1; // Por defecto virtual
       if (datosCita.tipoReunion) {
         const tipoReunion = datosCita.tipoReunion.toLowerCase();
@@ -124,8 +122,7 @@ ${promptDatosRegistro}
           tipoReunionId = 2;
         } else if (tipoReunion.includes('virtual') || tipoReunion === '1') {
           tipoReunionId = 1;
-          // Agregar información de horario para reuniones virtuales
-          // cleanResponse = cleanResponse.substring(0, citaIndex).trim();
+           cleanResponse = cleanResponse.substring(0, citaIndex).trim();
         }
       }
 
@@ -138,17 +135,22 @@ ${promptDatosRegistro}
         direccion: datosCita.tienda || 'Lima'
       });
 
-      // Eliminar la parte del JSON de la respuesta si no se ha hecho ya
+      // Marcar que la cita ya ha sido guardada para este usuario
+      state.citaGuardada = true;
+      
+      
       if (!tipoReunionId === 1) {
         cleanResponse = cleanResponse.substring(0, citaIndex).trim();
       }
 
-      // cleanResponse += `\n¡Tu cita ha sido confirmada para el ${datosCita.fecha} a las ${datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
-      cleanResponse += `\nNos pondremos en contacto contigo pronto.`;
+      cleanResponse += `\n¡Tu cita ha sido confirmada para el ${datosCita.fecha} a las ${datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
     } catch (error) {
       console.error("Error al parsear JSON o guardar cita:", error);
       cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nLo siento, hubo un problema al confirmar tu cita. Por favor, intenta de nuevo más tarde.";
     }
+  } else if (citaIndex !== -1 && state.citaGuardada) {
+    
+    cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nYa tienes una cita agendada. Si deseas modificarla o agendar una nueva, por favor indícalo claramente.";
   }
 
   state.messages.push({ role: "user", content: message });
