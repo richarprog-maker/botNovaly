@@ -1,8 +1,6 @@
 const { getOpenAIResponse } = require('../../services/openaiService.js');
 const { clienteExiste, buscarClientePorTelefono } = require('../flujos/citas/db/buscarClientes.js');
-const {
-  guardarCliente, guardarCita
-} = require('../flujos/citas/db/appointmentDB.js');
+const { guardarCliente, guardarCita } = require('../flujos/citas/db/appointmentDB.js');
 const { obtenerFechaHoraActual } = require('../flujos/citas/validacionesFechaHora.js');
 const { getConversationFlowsText } = require('../../model/conversationFlows.js');
 
@@ -21,18 +19,16 @@ function getOrCreateConversationState(sender) {
 async function processWithOpenAI(message, sender, nombreCliente) {
   const state = getOrCreateConversationState(sender);
   const clienteYaRegistrado = await clienteExiste(sender);
-  let promptDatosRegistro = '';
-  if (clienteYaRegistrado) {
-    promptDatosRegistro = ` 
+
+  // Se ajustó el prompt para evitar redundancias y mejorar el rendimiento
+  let promptDatosRegistro = clienteYaRegistrado ? ` 
     Cita confirmada:
     {
       "fecha": "",
       "hora": "",
       "tipoReunion": ""
     }
-    `
-  } else {
-    promptDatosRegistro = ` 
+  ` : ` 
     Cita confirmada:
     {
       "nombre": "",
@@ -43,8 +39,8 @@ async function processWithOpenAI(message, sender, nombreCliente) {
       "empresa": "",
       "tipoReunion": ""
     }
-    `
-  }
+  `;
+
   const fechaHoraActual = obtenerFechaHoraActual();
   const fechaActualISO = `${fechaHoraActual.año}-${String(fechaHoraActual.mes).padStart(2, '0')}-${String(fechaHoraActual.dia).padStart(2, '0')}`;
   const hora = `${fechaHoraActual.hora}:${fechaHoraActual.minuto}`;
@@ -86,11 +82,10 @@ ${promptDatosRegistro}`}
   const response = await getOpenAIResponse(messagesForOpenAI);
   let cleanResponse = response.trim();
 
-  // Detectar el marcador "===CITA_JSON==="
+  // Manejo optimizado de la respuesta y mejora en la detección de la cita
   const citaMarker = "===CITA_JSON===";
   const citaIndex = cleanResponse.indexOf(citaMarker);
   if (citaIndex !== -1 && !state.citaGuardada) {
-    // Extraer el JSON
     const jsonStart = citaIndex + citaMarker.length;
     const jsonString = cleanResponse.substring(jsonStart).trim();
     try {
@@ -115,14 +110,13 @@ ${promptDatosRegistro}`}
         clienteId = clienteExistente.cliente_id;
       }
 
-      let tipoReunionId = 1; // Por defecto virtual
+      let tipoReunionId = 1;
       if (datosCita.tipoReunion) {
         const tipoReunion = datosCita.tipoReunion.toLowerCase();
         if (tipoReunion.includes('presencial') || tipoReunion === '2') {
           tipoReunionId = 2;
         } else if (tipoReunion.includes('virtual') || tipoReunion === '1') {
           tipoReunionId = 1;
-           cleanResponse = cleanResponse.substring(0, citaIndex).trim();
         }
       }
 
@@ -135,24 +129,19 @@ ${promptDatosRegistro}`}
         direccion: datosCita.tienda || 'Lima'
       });
 
-      // Marcar que la cita ya ha sido guardada para este usuario
       state.citaGuardada = true;
-      
-      
-      if (!tipoReunionId === 1) {
-        cleanResponse = cleanResponse.substring(0, citaIndex).trim();
-      }
 
+      cleanResponse = cleanResponse.substring(0, citaIndex).trim();
       cleanResponse += `\n¡Tu cita ha sido confirmada para el ${datosCita.fecha} a las ${datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
     } catch (error) {
       console.error("Error al parsear JSON o guardar cita:", error);
       cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nLo siento, hubo un problema al confirmar tu cita. Por favor, intenta de nuevo más tarde.";
     }
   } else if (citaIndex !== -1 && state.citaGuardada) {
-    
     cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nYa tienes una cita agendada. Si deseas modificarla o agendar una nueva, por favor indícalo claramente.";
   }
 
+  // Mantener los mensajes dentro de un límite para evitar sobrecargar la memoria
   state.messages.push({ role: "user", content: message });
   state.messages.push({ role: "assistant", content: cleanResponse });
   if (state.messages.length > 10) state.messages = state.messages.slice(-10);
