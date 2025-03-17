@@ -13,6 +13,20 @@ const conversationFlows = {
       'Si el cliente no desea dar su nombre, continúa sin problema.'
     ]
   },
+  REGISTRO_CITA: {
+    id: 9,
+    name: 'REGISTRO DE CITA',
+    instructions: [
+      'Cuando el cliente solicite agendar una cita, primero pregunta por la fecha y hora deseada.',
+      // 'Una vez que el cliente proporcione la fecha y hora, verifica si es un cliente nuevo o existente.',
+      'Si es un cliente nuevo, solicita su nombre completo, apellidos, correo electrónico y empresa.',
+      'Si es un cliente existente, NUNCA solicites datos personales. Solo solicita confirmar la fecha, hora y tipo de reunión.',
+      'Para clientes existentes, NO pidas nombre, apellidos, correo o empresa, ya que estos datos ya están registrados.',
+      'Asegúrate de recopilar TODOS los datos necesarios antes de confirmar la cita.',
+      'No generes el JSON de confirmación hasta tener todos los datos requeridos.',
+      'Muestra los datos recopilados y pide confirmación antes de finalizar el registro.'
+    ]
+  },
   CONSULTA_SERVICIOS_PRECIOS: {
     id: 2,
     name: 'CONSULTA SOBRE SERVICIOS Y PRECIOS',
@@ -65,7 +79,8 @@ const conversationFlows = {
       'Usa el formato: "¡Claro [Nombre del cliente]! Podemos agendar una reunión virtual o una presencial."',
       'Incluye la nota: "📌 Importante: ✔️ Las reuniones presenciales solo están disponibles en Lima y en las oficinas del cliente."',
       'Finaliza con: "🔹 ¿Cuál prefieres?"',
-      'Captura la respuesta del cliente para determinar el tipo de reunión (virtual=1, presencial=2).'
+      'Captura la respuesta del cliente para determinar el tipo de reunión (virtual=1, presencial=2).',
+      'Si el cliente elige reunión presencial, solicita la dirección de su oficina con un mensaje como: "Para coordinar mejor, ¿puedes indicarme la dirección de tu oficina?"'
     ]
   },
   REUNION_VIRTUAL_HORARIO: {

@@ -94,7 +94,6 @@ const obtenerAsesores = async () => {
     }
 };
 
-// La función obtenerClientePorTelefono se ha movido a buscarClientes.js
 
 module.exports = {
     guardarCliente,

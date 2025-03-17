@@ -11,7 +11,7 @@ const clienteExiste = async (telefono) => {
         const query = `
             SELECT COUNT(*) as count
             FROM tbl_clientes
-            WHERE telefono_cliente = ?
+            WHERE telefono_cliente = ? LIMIT 1
         `;
         const [rows] = await connection.query(query, [telefono]);
         return rows[0].count > 0;
@@ -31,14 +31,21 @@ const buscarClientePorTelefono = async (telefono) => {
         const connection = await getConnection();
         const query = `
             SELECT cliente_id, nombre_cliente, correo_cliente, nombre_empresa, telefono_cliente
-            FROM tbl_clientes
+            FROM tbl_clientes 
             WHERE telefono_cliente = ?
+            LIMIT 1
         `;
         const [rows] = await connection.query(query, [telefono]);
-        return rows.length > 0 ? rows[0] : null;
+        
+        if (rows.length === 0) {
+            console.log(`No se encontró cliente con teléfono: ${telefono}`);
+            return null;
+        }
+        
+        return rows[0];
     } catch (error) {
         console.error("Error al buscar cliente por teléfono:", error);
-        return null;
+        throw new Error(`Error al buscar cliente: ${error.message}`);
     }
 };
 

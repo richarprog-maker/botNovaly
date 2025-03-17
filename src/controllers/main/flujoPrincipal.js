@@ -1,8 +1,8 @@
 const { getOpenAIResponse } = require('../../services/openaiService.js');
-const { clienteExiste, buscarClientePorTelefono } = require('../flujos/citas/db/buscarClientes.js');
-const { guardarCliente, guardarCita } = require('../flujos/citas/db/appointmentDB.js');
+const { clienteExiste } = require('../flujos/citas/db/buscarClientes.js');
 const { obtenerFechaHoraActual } = require('../flujos/citas/validacionesFechaHora.js');
 const { getConversationFlowsText } = require('../../model/conversationFlows.js');
+const { generarPromptDatosRegistro, inicializarDatosParciales, procesarRespuestaOpenAI } = require('../flujos/citas/flujoCitas.js');
 
 const conversationState = new Map();
 
@@ -20,26 +20,11 @@ async function processWithOpenAI(message, sender, nombreCliente) {
   const state = getOrCreateConversationState(sender);
   const clienteYaRegistrado = await clienteExiste(sender);
 
-  // Se ajustó el prompt para evitar redundancias y mejorar el rendimiento
-  let promptDatosRegistro = clienteYaRegistrado ? ` 
-    Cita confirmada:
-    {
-      "fecha": "",
-      "hora": "",
-      "tipoReunion": ""
-    }
-  ` : ` 
-    Cita confirmada:
-    {
-      "nombre": "",
-      "apellidos": "",
-      "correo": "",
-      "fecha": "",
-      "hora": "",
-      "empresa": "",
-      "tipoReunion": ""
-    }
-  `;
+  // Generar prompt para el registro de datos
+  let promptDatosRegistro = generarPromptDatosRegistro(clienteYaRegistrado);
+  
+
+  inicializarDatosParciales(state, clienteYaRegistrado);
 
   const fechaHoraActual = obtenerFechaHoraActual();
   const fechaActualISO = `${fechaHoraActual.año}-${String(fechaHoraActual.mes).padStart(2, '0')}-${String(fechaHoraActual.dia).padStart(2, '0')}`;
@@ -71,6 +56,8 @@ ${getConversationFlowsText()}
 ${state.citaGuardada ? '**Nota: Ya has agendado una cita. Si necesitas otra cita o modificar la existente, por favor indícalo claramente.**' : `**Al confirmar citas, incluye la información en formato JSON al final del mensaje, precedida por "===CITA_JSON===":*
 ===CITA_JSON===
 ${promptDatosRegistro}`}
+
+${clienteYaRegistrado ? '**Nota: Ya estás registrado en nuestro sistema. Solo necesitas proporcionar los datos de la cita.**' : ''}
 `.trim();
 
   const messagesForOpenAI = [
@@ -80,66 +67,9 @@ ${promptDatosRegistro}`}
   ];
 
   const response = await getOpenAIResponse(messagesForOpenAI);
-  let cleanResponse = response.trim();
-
-  // Manejo optimizado de la respuesta y mejora en la detección de la cita
-  const citaMarker = "===CITA_JSON===";
-  const citaIndex = cleanResponse.indexOf(citaMarker);
-  if (citaIndex !== -1 && !state.citaGuardada) {
-    const jsonStart = citaIndex + citaMarker.length;
-    const jsonString = cleanResponse.substring(jsonStart).trim();
-    try {
-      const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error("No se encontró un objeto JSON válido");
-      }
-
-      const datosCita = JSON.parse(jsonMatch[0]);
-      let clienteId;
-
-      if (!clienteYaRegistrado) {
-        const clienteResult = await guardarCliente({
-          nombre_cliente: `${datosCita.nombre} ${datosCita.apellidos}`,
-          correo_cliente: datosCita.correo,
-          nombre_empresa: datosCita.empresa,
-          telefono_cliente: sender
-        });
-        clienteId = clienteResult.cliente_id;
-      } else {
-        const clienteExistente = await buscarClientePorTelefono(sender);
-        clienteId = clienteExistente.cliente_id;
-      }
-
-      let tipoReunionId = 1;
-      if (datosCita.tipoReunion) {
-        const tipoReunion = datosCita.tipoReunion.toLowerCase();
-        if (tipoReunion.includes('presencial') || tipoReunion === '2') {
-          tipoReunionId = 2;
-        } else if (tipoReunion.includes('virtual') || tipoReunion === '1') {
-          tipoReunionId = 1;
-        }
-      }
-
-      await guardarCita({
-        cliente_id: clienteId,
-        asesor_id: datosCita.asesorId || 1,
-        tiporeunion_id: tipoReunionId,
-        fecha_reunion: datosCita.fecha,
-        hora_reunion: datosCita.hora,
-        direccion: datosCita.tienda || 'Lima'
-      });
-
-      state.citaGuardada = true;
-
-      cleanResponse = cleanResponse.substring(0, citaIndex).trim();
-      cleanResponse += `\n¡Tu cita ha sido confirmada para el ${datosCita.fecha} a las ${datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
-    } catch (error) {
-      console.error("Error al parsear JSON o guardar cita:", error);
-      cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nLo siento, hubo un problema al confirmar tu cita. Por favor, intenta de nuevo más tarde.";
-    }
-  } else if (citaIndex !== -1 && state.citaGuardada) {
-    cleanResponse = cleanResponse.substring(0, citaIndex).trim() + "\n\nYa tienes una cita agendada. Si deseas modificarla o agendar una nueva, por favor indícalo claramente.";
-  }
+  
+  // Procesar la respuesta utilizando el módulo de citas
+  let cleanResponse = await procesarRespuestaOpenAI(response, state, sender);
 
   // Mantener los mensajes dentro de un límite para evitar sobrecargar la memoria
   state.messages.push({ role: "user", content: message });
