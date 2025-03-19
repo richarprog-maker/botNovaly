@@ -1,8 +1,9 @@
 const { getConnection } = require('../../../../config/dbConnection');
 
 const guardarCliente = async (cliente) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
         const query = `
             INSERT INTO tbl_clientes (nombre_cliente, correo_cliente, nombre_empresa, telefono_cliente)
             VALUES (?, ?, ?, ?)
@@ -17,12 +18,22 @@ const guardarCliente = async (cliente) => {
     } catch (error) {
         console.error("Error al guardar el cliente:", error);
         return { success: false, message: "Hubo un error al registrar el cliente. Intenta de nuevo." };
+    } finally {
+        if (connection) {
+            try {
+                await connection.release();
+                console.log("Conexión liberada en guardarCliente");
+            } catch (releaseError) {
+                console.error("Error al liberar conexión en guardarCliente:", releaseError);
+            }
+        }
     }
 };
 
 const guardarAsesor = async (asesor) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
         const query = `
             INSERT INTO tbl_asesores (nombre_asesor, correo_asesor, telefono_asesor, horario_atencion)
             VALUES (?, ?, ?, ?)
@@ -37,10 +48,20 @@ const guardarAsesor = async (asesor) => {
     } catch (error) {
         console.error("Error al guardar el asesor:", error);
         return { success: false, message: "Hubo un error al registrar el asesor. Intenta de nuevo." };
+    } finally {
+        if (connection) {
+            try {
+                await connection.release();
+                console.log("Conexión liberada en guardarAsesor");
+            } catch (releaseError) {
+                console.error("Error al liberar conexión en guardarAsesor:", releaseError);
+            }
+        }
     }
 };
 
 const guardarCita = async (cita) => {
+    let connection;
     try {
         // Validar y formatear fecha y hora antes de guardar
         let fechaReunion = cita.fecha_reunion;
@@ -93,7 +114,7 @@ const guardarCita = async (cita) => {
         
         console.log(`Guardando cita con fecha: ${fechaReunion} y hora: ${horaReunion}`);
         
-        const connection = await getConnection();
+        connection = await getConnection();
         const query = `
             INSERT INTO tbl_citas (cliente_id, asesor_id, tiporeunion_id, fecha_reunion, hora_reunion, direccion)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -112,12 +133,22 @@ const guardarCita = async (cita) => {
     } catch (error) {
         console.error("Error en guardarCita:", error);
         return { success: false, message: `Error al guardar la cita: ${error.message}` };
+    } finally {
+        if (connection) {
+            try {
+                await connection.release();
+                console.log("Conexión liberada en guardarCita");
+            } catch (releaseError) {
+                console.error("Error al liberar conexión en guardarCita:", releaseError);
+            }
+        }
     }
 };
 
 const obtenerTiposReunion = async () => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
         const query = `
             SELECT tiporeunion_id, nombre
             FROM tbl_tiporeunion
@@ -127,12 +158,22 @@ const obtenerTiposReunion = async () => {
     } catch (error) {
         console.error("Error al obtener tipos de reunión:", error);
         return [];
+    } finally {
+        if (connection) {
+            try {
+                await connection.release();
+                console.log("Conexión liberada en obtenerTiposReunion");
+            } catch (releaseError) {
+                console.error("Error al liberar conexión en obtenerTiposReunion:", releaseError);
+            }
+        }
     }
 };
  
 const obtenerAsesores = async () => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
         const query = `
             SELECT asesor_id, nombre_asesor, correo_asesor, telefono_asesor, horario_atencion
             FROM tbl_asesores
@@ -142,6 +183,15 @@ const obtenerAsesores = async () => {
     } catch (error) {
         console.error("Error al obtener asesores:", error);
         return [];
+    } finally {
+        if (connection) {
+            try {
+                await connection.release();
+                console.log("Conexión liberada en obtenerAsesores");
+            } catch (releaseError) {
+                console.error("Error al liberar conexión en obtenerAsesores:", releaseError);
+            }
+        }
     }
 };
 

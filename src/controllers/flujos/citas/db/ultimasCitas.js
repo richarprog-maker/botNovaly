@@ -1,8 +1,9 @@
 const { getConnection } = require('../../../../config/dbConnection');
 
 const obtenerDetallesUltimaCita = async (telefono) => {
+    let conexion;
     try {
-        const conexion = await getConnection();
+        conexion = await getConnection();
         const consulta = `
             SELECT c.cita_id, c.fecha_reunion, c.hora_reunion, c.direccion,
                    tr.tiporeunion_id, tr.nombre AS tipo_reunion,
@@ -21,6 +22,15 @@ const obtenerDetallesUltimaCita = async (telefono) => {
     } catch (error) {
         console.error("Error al obtener detalles de la última cita:", error);
         return null;
+    } finally {
+        if (conexion) {
+            try {
+                await conexion.release();
+                console.log("Conexión liberada en obtenerDetallesUltimaCita");
+            } catch (releaseError) {
+                console.error("Error al liberar conexión en obtenerDetallesUltimaCita:", releaseError);
+            }
+        }
     }
 }; 
 

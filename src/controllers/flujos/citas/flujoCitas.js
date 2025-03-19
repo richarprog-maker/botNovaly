@@ -2,6 +2,7 @@
 const { clienteExiste, buscarClientePorTelefono } = require('./db/buscarClientes.js');
 const { guardarCliente, guardarCita } = require('./db/appointmentDB.js');
 const { obtenerFechaHoraActual } = require('./validacionesFechaHora.js');
+const { obtenerDetallesUltimaCita } = require('./db/ultimasCitas.js');
 
 function generarPromptDatosRegistro(clienteYaRegistrado) {
   // Si el cliente ya está registrado, solo solicitar datos de la cita
@@ -180,7 +181,7 @@ async function procesarRespuestaOpenAI(response, state, sender) {
     
     if (!citaResult.success) {
       console.error("Error al guardar la cita:(", citaResult.message);
-      throw new Error(citaResult.message);
+      throw new Error(citaResult.message); 
     }
     
     state.citaGuardada = true;
@@ -198,8 +199,8 @@ async function procesarRespuestaOpenAI(response, state, sender) {
   }
 }
 
-module.exports = {
-  generarPromptDatosRegistro,
+module.exports = { 
+  generarPromptDatosRegistro, 
   inicializarDatosParciales,
   procesarRespuestaOpenAI
 };
