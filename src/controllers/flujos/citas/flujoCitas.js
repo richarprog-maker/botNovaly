@@ -96,18 +96,19 @@ function determinarTipoReunionId(tipoReunion) {
 
 
 async function procesarRespuestaOpenAI(response, state, sender) {
-  let cleanResponse = response.trim();
-  const citaMarker = "===CITA_JSON===";
-  const citaIndex = cleanResponse.indexOf(citaMarker);
-  
-  // Si no hay marcador de cita o ya hay una cita guardada, devolver la respuesta sin procesar
-  if (citaIndex === -1 || state.citaGuardada) {
-    if (citaIndex !== -1 && state.citaGuardada) {
-      cleanResponse = cleanResponse.substring(0, citaIndex).trim() + 
-        "\n\nYa tienes una cita agendada. Si deseas modificarla o agendar una nueva, por favor indícalo claramente.";
+  try {
+    let cleanResponse = response.trim();
+    const citaMarker = "===CITA_JSON===";
+    const citaIndex = cleanResponse.indexOf(citaMarker);
+    
+    // Si no hay marcador de cita o ya hay una cita guardada, devolver la respuesta sin procesar
+    if (citaIndex === -1 || state.citaGuardada) {
+      if (citaIndex !== -1 && state.citaGuardada) {
+        cleanResponse = cleanResponse.substring(0, citaIndex).trim() + 
+          "\n\nYa tienes una cita agendada. Si deseas modificarla o agendar una nueva, por favor indícalo claramente.";
+      }
+      return cleanResponse;
     }
-    return cleanResponse;
-  }
 
   const jsonStart = citaIndex + citaMarker.length;
   const jsonString = cleanResponse.substring(jsonStart).trim();
@@ -172,13 +173,13 @@ async function procesarRespuestaOpenAI(response, state, sender) {
       cliente_id: clienteId,
       asesor_id: datosCita.asesorId || 1,
       tiporeunion_id: tipoReunionId,
-      fecha_reunion: state.datosParciales.datosCita.fecha,
+      fecha_reunion: state.datosParciales.datosCita.fecha, 
       hora_reunion: state.datosParciales.datosCita.hora,
       direccion: state.datosParciales.datosCita.direccion || datosCita.tienda || 'Lima'
     });
     
     if (!citaResult.success) {
-      console.error("Error al guardar la cita:", citaResult.message);
+      console.error("Error al guardar la cita:(", citaResult.message);
       throw new Error(citaResult.message);
     }
     
@@ -190,6 +191,10 @@ async function procesarRespuestaOpenAI(response, state, sender) {
     console.error("Error al parsear JSON o guardar cita:", error);
     return cleanResponse.substring(0, citaIndex).trim() + 
       "\n\nLo siento, hubo un problema al confirmar tu cita. Por favor, intenta de nuevo más tarde.";
+  }
+  } catch (error) {
+    console.error("Error general en procesarRespuestaOpenAI:", error);
+    return response ? response.trim() : "Lo siento, hubo un problema al procesar tu mensaje. Por favor, intenta de nuevo.";
   }
 }
 

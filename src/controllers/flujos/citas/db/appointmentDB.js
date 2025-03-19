@@ -42,6 +42,57 @@ const guardarAsesor = async (asesor) => {
 
 const guardarCita = async (cita) => {
     try {
+        // Validar y formatear fecha y hora antes de guardar
+        let fechaReunion = cita.fecha_reunion;
+        let horaReunion = cita.hora_reunion;
+        
+        // Validar formato de fecha (debe ser YYYY-MM-DD para MySQL)
+        if (typeof fechaReunion === 'string' && !fechaReunion.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            console.log(`Formato de fecha incorrecto: ${fechaReunion}, intentando convertir...`);
+            // Intentar convertir formatos comunes (DD/MM/YYYY, DD-MM-YYYY) a YYYY-MM-DD
+            try {
+                const partesFecha = fechaReunion.split(/[\/\-\.]/); // Separar por /, - o .
+                if (partesFecha.length === 3) {
+                    // Asumir formato DD/MM/YYYY si el primer número es <= 31
+                    if (parseInt(partesFecha[0]) <= 31 && parseInt(partesFecha[1]) <= 12) {
+                        fechaReunion = `${partesFecha[2].padStart(4, '20')}-${partesFecha[1].padStart(2, '0')}-${partesFecha[0].padStart(2, '0')}`;
+                        console.log(`Fecha convertida a: ${fechaReunion}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Error al convertir formato de fecha:", error);
+                return { success: false, message: "El formato de la fecha no es válido. Debe ser DD/MM/YYYY o YYYY-MM-DD." };
+            }
+        }
+        
+        // Validar formato de hora (debe ser HH:MM:SS para MySQL)
+        if (typeof horaReunion === 'string') {
+            if (!horaReunion.match(/^\d{1,2}:\d{2}(:\d{2})?$/)) {
+                console.log(`Formato de hora incorrecto: ${horaReunion}, intentando convertir...`);
+                // Intentar extraer horas y minutos de formatos comunes
+                try {
+                    const coincidencia = horaReunion.match(/(\d{1,2})\s*[:\.\h]\s*(\d{2})/i);
+                    if (coincidencia) {
+                        const horas = coincidencia[1].padStart(2, '0');
+                        const minutos = coincidencia[2];
+                        horaReunion = `${horas}:${minutos}:00`;
+                        console.log(`Hora convertida a: ${horaReunion}`);
+                    } else {
+                        return { success: false, message: "El formato de la hora no es válido. Debe ser HH:MM." };
+                    }
+                } catch (error) {
+                    console.error("Error al convertir formato de hora:", error);
+                    return { success: false, message: "El formato de la hora no es válido. Debe ser HH:MM." };
+                }
+            } else if (horaReunion.match(/^\d{1,2}:\d{2}$/)) {
+                // Si solo tiene HH:MM, añadir los segundos
+                horaReunion = `${horaReunion}:00`;
+                console.log(`Hora completada a: ${horaReunion}`);
+            }
+        }
+        
+        console.log(`Guardando cita con fecha: ${fechaReunion} y hora: ${horaReunion}`);
+        
         const connection = await getConnection();
         const query = `
             INSERT INTO tbl_citas (cliente_id, asesor_id, tiporeunion_id, fecha_reunion, hora_reunion, direccion)
@@ -51,8 +102,8 @@ const guardarCita = async (cita) => {
             cita.cliente_id,
             cita.asesor_id,
             cita.tiporeunion_id,
-            cita.fecha_reunion,
-            cita.hora_reunion,
+            fechaReunion,
+            horaReunion,
             cita.direccion
         ]);
         return result.affectedRows > 0
@@ -60,7 +111,7 @@ const guardarCita = async (cita) => {
             : { success: false, message: "Lo siento, hubo un error al guardar la cita. Por favor, inténtalo de nuevo." };
     } catch (error) {
         console.error("Error en guardarCita:", error);
-        return { success: false, message: "Ups, parece que hubo un error interno al agendar. Por favor, verifica los datos e inténtalo nuevamente." };
+        return { success: false, message: `Error al guardar la cita: ${error.message}` };
     }
 };
 
@@ -78,7 +129,7 @@ const obtenerTiposReunion = async () => {
         return [];
     }
 };
-
+ 
 const obtenerAsesores = async () => {
     try {
         const connection = await getConnection();

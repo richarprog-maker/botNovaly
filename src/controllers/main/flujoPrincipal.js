@@ -69,7 +69,13 @@ ${clienteYaRegistrado ? '**Nota: Ya estás registrado en nuestro sistema. Solo n
   const response = await getOpenAIResponse(messagesForOpenAI);
   
   // Procesar la respuesta utilizando el módulo de citas
-  let cleanResponse = await procesarRespuestaOpenAI(response, state, sender);
+  let cleanResponse;
+  try {
+    cleanResponse = await procesarRespuestaOpenAI(response, state, sender);
+  } catch (error) {
+    console.error("Error al procesar respuesta OpenAI:", error);
+    cleanResponse = "Lo siento, hubo un problema al procesar tu solicitud. Por favor, intenta de nuevo.";
+  }
 
   // Mantener los mensajes dentro de un límite para evitar sobrecargar la memoria
   state.messages.push({ role: "user", content: message });
