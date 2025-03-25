@@ -62,6 +62,7 @@ ON DUPLICATE KEY UPDATE nombre = VALUES(nombre), descripcion = VALUES(descripcio
 -- Datos iniciales para asesores (ejemplo)
 INSERT INTO tbl_asesores (asesor_id, nombre_asesor, correo_asesor, telefono_asesor, horario_atencion) VALUES
 (1, 'Asesor Principal', 'asesor@novaly.com', '999999999', 'Lunes a Viernes 9:00 - 18:00')
+INSERT INTO `tbl_asesores` (`asesor_id`, `nombre_asesor`, `correo_asesor`, `telefono_asesor`, `horario_atencion`, `created_at`, `updated_at`) VALUES (NULL, 'CEO', 'aarevalo@novaly.com.pe', '51942400419', NULL, current_timestamp(), current_timestamp());
 ON DUPLICATE KEY UPDATE 
     nombre_asesor = VALUES(nombre_asesor), 
     correo_asesor = VALUES(correo_asesor), 

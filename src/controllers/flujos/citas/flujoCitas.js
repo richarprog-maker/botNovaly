@@ -202,5 +202,6 @@ async function procesarRespuestaOpenAI(response, state, sender) {
 module.exports = { 
   generarPromptDatosRegistro, 
   inicializarDatosParciales,
-  procesarRespuestaOpenAI
+  procesarRespuestaOpenAI,
+  determinarTipoReunionId
 };

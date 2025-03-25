@@ -13,6 +13,18 @@ const conversationFlows = {
       'Si el cliente no desea dar su nombre, continúa sin problema.'
     ]
   },
+  REAGENDAMIENTO_CITA: {
+    id: 10,
+    name: 'REAGENDAMIENTO DE CITA',
+    instructions: [
+      'Cuando el cliente solicite reagendar o modificar una cita existente, primero muestra los detalles de su última cita. que esta en detalles de ultima cita',
+      'Presenta la información de la cita actual (fecha, hora, tipo de reunión, dirección si aplica).',
+      'Solicita al cliente que indique qué datos desea modificar (fecha, hora, tipo de reunión o dirección).',
+      'Verifica que los nuevos datos sean válidos antes de confirmar el reagendamiento.',
+      'Cuando tengas todos los datos necesarios, genera el JSON de reagendamiento con el formato especificado.',
+      'Confirma con el cliente los cambios realizados y muestra la información actualizada de la cita.'
+    ]
+  },
   REGISTRO_CITA: {
     id: 9,
     name: 'REGISTRO DE CITA',

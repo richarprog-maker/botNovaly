@@ -43,9 +43,9 @@ class HookServices {
             }
 
             // Si la respuesta es un objeto y contiene propiedades de botones, la retornamos directamente
-            if (typeof response === 'object' && response.buttons) {
-                return response;
-            }
+            // if (typeof response === 'object' && response.buttons) {
+            //     return response;
+            // }
             return {
                 texto: response,
                 urmedia: '',

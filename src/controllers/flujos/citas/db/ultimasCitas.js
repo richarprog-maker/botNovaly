@@ -1,5 +1,39 @@
 const { getConnection } = require('../../../../config/dbConnection');
 
+
+const formatearDetallesCita = (cita) => {
+    if (!cita) {
+        // Devolver un objeto con estructura adecuada cuando no hay citas previas
+        return {
+            textoFormateado: "No se encontraron citas previas."
+        };
+    }
+    
+    // Formatear fecha para mostrarla en formato DD/MM/YYYY
+    const fechaOriginal = new Date(cita.fecha_reunion);
+    const fechaFormateada = `${fechaOriginal.getDate().toString().padStart(2, '0')}/${(fechaOriginal.getMonth() + 1).toString().padStart(2, '0')}/${fechaOriginal.getFullYear()}`;
+
+    // Formatear hora para mostrarla en formato HH:MM
+    const horaOriginal = cita.hora_reunion;
+    const horaFormateada = horaOriginal.substring(0, 5);
+
+    // Crear texto formateado para mostrar al usuario
+    const textoFormateado = `
+    Datos de tu última cita:
+    - Fecha: ${fechaFormateada}
+    - Hora: ${horaFormateada}
+    - Tipo de reunión: ${cita.tipo_reunion}
+    ${cita.direccion ? `- Dirección: ${cita.direccion}` : ''}
+    - Asesor: ${cita.nombre_asesor || 'Por asignar'}
+    `;
+
+    // Devolver objeto original con el texto formateado añadido
+    return {
+        ...cita,
+        textoFormateado
+    };
+};
+
 const obtenerDetallesUltimaCita = async (telefono) => {
     let conexion;
     try {
@@ -18,7 +52,9 @@ const obtenerDetallesUltimaCita = async (telefono) => {
             LIMIT 1
         `;
         const [filas] = await conexion.query(consulta, [telefono]);
-        return filas[0];
+        
+        // Formatear los detalles de la cita antes de devolverlos
+        return formatearDetallesCita(filas[0]);
     } catch (error) {
         console.error("Error al obtener detalles de la última cita:", error);
         return null;

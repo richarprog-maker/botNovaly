@@ -3,6 +3,8 @@ const { clienteExiste } = require('../flujos/citas/db/buscarClientes.js');
 const { obtenerFechaHoraActual } = require('../flujos/citas/validacionesFechaHora.js');
 const { getConversationFlowsText } = require('../../model/conversationFlows.js');
 const { generarPromptDatosRegistro, inicializarDatosParciales, procesarRespuestaOpenAI } = require('../flujos/citas/flujoCitas.js');
+const { obtenerDetallesUltimaCita } = require('../flujos/citas/db/ultimasCitas.js');
+const { procesarReagendamientoOpenAI } = require('../flujos/citas/flujoReagendamiento.js');
 
 const conversationState = new Map();
 
@@ -23,7 +25,8 @@ async function processWithOpenAI(message, sender, nombreCliente) {
   // Generar prompt para el registro de datos
   let promptDatosRegistro = generarPromptDatosRegistro(clienteYaRegistrado);
   
-
+  // Obtener detalles de la última cita en formato JSON
+  let detallesUltimaCita = await obtenerDetallesUltimaCita(sender);
   inicializarDatosParciales(state, clienteYaRegistrado);
 
   const fechaHoraActual = obtenerFechaHoraActual();
@@ -50,10 +53,20 @@ Eres Valeria, asistente virtual de Novaly, experta en atención al cliente de un
 🔹 Cifrado de datos para proteger la información.
 🔹 Cumplimos con normativas de seguridad digital.
 🔹 Accesos controlados para evitar filtraciones.
+**Detalles de última cita:**
+${typeof detallesUltimaCita === 'object' && detallesUltimaCita.textoFormateado ? detallesUltimaCita.textoFormateado : detallesUltimaCita}
 
 ${getConversationFlowsText()}
 
-${state.citaGuardada ? '**Nota: Ya has agendado una cita. Si necesitas otra cita o modificar la existente, por favor indícalo claramente.**' : `**Al confirmar citas, incluye la información en formato JSON al final del mensaje, precedida por "===CITA_JSON===":*
+${state.citaGuardada ? `**Nota: Ya has agendado una cita o si quieres o si deseas reagendarla, incluye la información en formato JSON al final del mensaje, precedida por "===REAGENDAMIENTO_JSON===":*
+===REAGENDAMIENTO_JSON===
+ {
+      "fecha": "",
+      "hora": "",
+      "tipoReunion": "",
+      "direccion": ""
+    }
+` : `**Al confirmar citas, incluye la información en formato JSON al final del mensaje, precedida por "===CITA_JSON===":*
 ===CITA_JSON===
 ${promptDatosRegistro}`}
 
@@ -67,11 +80,15 @@ ${clienteYaRegistrado ? '**Nota: Ya estás registrado en nuestro sistema. Solo n
   ];
 
   const response = await getOpenAIResponse(messagesForOpenAI);
-  
-  // Procesar la respuesta utilizando el módulo de citas
+ 
   let cleanResponse;
   try {
-    cleanResponse = await procesarRespuestaOpenAI(response, state, sender);
+    // Verificar si es un reagendamiento
+    if (state.citaGuardada && response.includes("===REAGENDAMIENTO_JSON===")) {
+      cleanResponse = await procesarReagendamientoOpenAI(response, state, sender);
+    } else {
+      cleanResponse = await procesarRespuestaOpenAI(response, state, sender);
+    }
   } catch (error) {
     console.error("Error al procesar respuesta OpenAI:", error);
     cleanResponse = "Lo siento, hubo un problema al procesar tu solicitud. Por favor, intenta de nuevo.";
