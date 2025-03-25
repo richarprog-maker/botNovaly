@@ -1,8 +1,9 @@
 
 const { clienteExiste, buscarClientePorTelefono } = require('./db/buscarClientes.js');
-const { guardarCliente, guardarCita } = require('./db/appointmentDB.js');
+const { guardarCliente, guardarCita, obtenerAsesores } = require('./db/appointmentDB.js');
 const { obtenerFechaHoraActual } = require('./validacionesFechaHora.js');
 const { obtenerDetallesUltimaCita } = require('./db/ultimasCitas.js');
+const { notificarAsesoresPorWhatsApp } = require('./whatsappService.js');
 
 function generarPromptDatosRegistro(clienteYaRegistrado) {
   // Si el cliente ya está registrado, solo solicitar datos de la cita
@@ -182,6 +183,46 @@ async function procesarRespuestaOpenAI(response, state, sender) {
     if (!citaResult.success) {
       console.error("Error al guardar la cita:(", citaResult.message);
       throw new Error(citaResult.message); 
+    }
+    
+    // Obtener datos del cliente para la notificación
+    const datosCliente = clienteYaRegistrado ? 
+      await buscarClientePorTelefono(sender) : 
+      {
+        nombre_cliente: `${state.datosParciales.datosCliente.nombre} ${state.datosParciales.datosCliente.apellidos}`,
+        correo_cliente: state.datosParciales.datosCliente.correo,
+        nombre_empresa: state.datosParciales.datosCliente.empresa,
+        telefono_cliente: sender
+      };
+    
+    // Preparar datos de la cita para la notificación
+    const datosCitaNotificacion = {
+      tiporeunion_id: tipoReunionId,
+      fecha_reunion: state.datosParciales.datosCita.fecha,
+      hora_reunion: state.datosParciales.datosCita.hora,
+      direccion: state.datosParciales.datosCita.direccion || datosCita.tienda || 'Lima',
+      cita_id: citaResult.cita_id
+    };
+    
+    try {
+      // Obtener lista de asesores para notificar
+      const listaAsesores = await obtenerAsesores();
+      
+      if (listaAsesores && listaAsesores.length > 0) {
+        // Enviar notificaciones por WhatsApp a los asesores
+        const resultadoNotificacion = await notificarAsesoresPorWhatsApp(
+          datosCitaNotificacion,
+          datosCliente,
+          listaAsesores
+        );
+        
+        console.log("Resultado de notificaciones WhatsApp:", resultadoNotificacion.message);
+      } else {
+        console.log("No se encontraron asesores para notificar");
+      }
+    } catch (notificacionError) {
+      // Solo registrar el error, no interrumpir el flujo
+      console.error("Error al enviar notificaciones WhatsApp:", notificacionError.message);
     }
     
     state.citaGuardada = true;

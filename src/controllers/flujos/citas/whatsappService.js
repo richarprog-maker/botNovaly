@@ -41,11 +41,13 @@ async function enviarNotificacionWhatsApp(datosCita, datosCliente, datosAsesor) 
     const telefono = datosAsesor.telefono_asesor.replace(/^\+/, '');
     
     // Enviar el mensaje usando el endpoint existente
-    const response = await axios.post('/send-message-bot', {
+    // Usamos la URL completa del servidor en lugar de una ruta relativa
+    const baseURL = process.env.API_BASE_URL || 'http://localhost:3004';
+    const response = await axios.post(`${baseURL}/send-message-bot`, {
       numero: telefono,
       texto: mensaje
     });
-    
+    response;
     console.log(`Notificación WhatsApp enviada exitosamente al asesor ${datosAsesor.nombre_asesor}`);
     return {
       success: true,
