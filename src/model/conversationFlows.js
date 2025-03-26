@@ -13,6 +13,17 @@ const conversationFlows = {
       'Si el cliente no desea dar su nombre, continúa sin problema.'
     ]
   },
+  SOLICITUD_ASESOR: {
+    id: 11,
+    name: 'SOLICITUD DE ASESOR',
+    instructions: [
+      'Cuando el cliente solicite hablar con un asesor o con el área comercial, responde con el mensaje estándar de derivación.',
+      'Usa el formato: "¡Por supuesto! 😊\n\n📞 Te vamos a derivar con nuestra área comercial, que se pondrá en contacto contigo.\n\nAntes de proceder, ¿en qué horario te acomoda mejor recibir la llamada? 📆\n\n📌 Recuerda que nuestro horario de atención es de lunes a viernes, de 9:00 a.m. a 6:00 p.m."',
+      'Captura la respuesta del cliente sobre su horario preferido.',
+      'Cuando tengas la información del horario, genera el JSON de solicitud de asesor con el formato especificado.',
+      'Confirma al cliente que un asesor se pondrá en contacto con él en el horario indicado.'
+    ]
+  },
   REAGENDAMIENTO_CITA: {
     id: 10,
     name: 'REAGENDAMIENTO DE CITA',

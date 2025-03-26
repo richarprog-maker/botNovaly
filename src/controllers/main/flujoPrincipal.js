@@ -5,6 +5,7 @@ const { getConversationFlowsText } = require('../../model/conversationFlows.js')
 const { generarPromptDatosRegistro, inicializarDatosParciales, procesarRespuestaOpenAI } = require('../flujos/citas/flujoCitas.js');
 const { obtenerDetallesUltimaCita } = require('../flujos/citas/db/ultimasCitas.js');
 const { procesarReagendamientoOpenAI } = require('../flujos/citas/flujoReagendamiento.js');
+const { procesarSolicitudAsesorOpenAI } = require('../flujos/citas/flujoSolicitudAsesor.js');
 
 const conversationState = new Map();
 
@@ -70,6 +71,12 @@ ${state.citaGuardada ? `**Nota: Ya has agendado una cita o si quieres o si desea
 ===CITA_JSON===
 ${promptDatosRegistro}`}
 
+**Cuando un cliente solicite hablar con un asesor, incluye la información en formato JSON al final del mensaje, precedida por "===SOLICITUD_ASESOR_JSON===":*
+===SOLICITUD_ASESOR_JSON===
+{
+  "horario": ""
+}
+
 ${clienteYaRegistrado ? '**Nota: Ya estás registrado en nuestro sistema. Solo necesitas proporcionar los datos de la cita.**' : ''}
 `.trim();
 
@@ -86,6 +93,10 @@ ${clienteYaRegistrado ? '**Nota: Ya estás registrado en nuestro sistema. Solo n
     // Verificar si es un reagendamiento
     if (state.citaGuardada && response.includes("===REAGENDAMIENTO_JSON===")) {
       cleanResponse = await procesarReagendamientoOpenAI(response, state, sender);
+    } 
+    // Verificar si es una solicitud de asesor
+    else if (response.includes("===SOLICITUD_ASESOR_JSON===")) {
+      cleanResponse = await procesarSolicitudAsesorOpenAI(response, state, sender);
     } else {
       cleanResponse = await procesarRespuestaOpenAI(response, state, sender);
     }
