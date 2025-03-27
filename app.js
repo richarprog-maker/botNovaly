@@ -5,6 +5,9 @@ const envPath = path.join(__dirname, './.env');
 // Cargamos el archivo de configuración .env
 dotenv.config({ path: envPath });
 
+// Importar el servicio de recordatorios de citas
+const { iniciarServicioRecordatorios } = require('./src/controllers/flujos/citas/recordatorioService');
+
 const { createBot, createProvider, createFlow, addKeyword, EVENTS } = require('@bot-whatsapp/bot')
 const BaileysProvider = require('@bot-whatsapp/provider/baileys')
 const JsonFileAdapter = require('@bot-whatsapp/database/json')
@@ -41,6 +44,14 @@ const main = async () => {
         })
     const server = new ServerHttp(adapterProvider);
     server.start();
+    
+    // Iniciar el servicio de recordatorios de citas
+    try {
+        const resultadoRecordatorios = iniciarServicioRecordatorios();
+        console.log(resultadoRecordatorios.message);
+    } catch (error) {
+        console.error("Error al iniciar el servicio de recordatorios:", error.message);
+    }
 
 }
 QRPortal({ port: 4001 });

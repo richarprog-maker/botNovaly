@@ -66,7 +66,7 @@ async function procesarSolicitudAsesorOpenAI(response, state, sender) {
       }
       
       return cleanResponse.substring(0, solicitudIndex).trim() + 
-        `\n\n¡Perfecto! He registrado tu solicitud. Un asesor de nuestro equipo se pondrá en contacto contigo en el horario indicado: ${datosSolicitud.horario || 'horario laboral'}.\n\n¿Hay algo más en lo que pueda ayudarte mientras tanto?`;
+        `\n\n¿Hay algo más en lo que pueda ayudarte mientras tanto?`;
     } catch (error) {
       console.error("Error al parsear JSON o procesar solicitud de asesor:", error);
       return cleanResponse.substring(0, solicitudIndex).trim() + 
