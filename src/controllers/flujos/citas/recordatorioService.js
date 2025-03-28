@@ -79,7 +79,7 @@ async function enviarRecordatorioCita(datosCita, datosCliente, tiempoAntes) {
     const telefono = datosCliente.telefono_cliente.replace(/^\+/, '');
     
     // Enviar el mensaje usando el endpoint existente
-    const baseURL = process.env.API_BASE_URL || 'http://localhost:3004';
+    const baseURL = process.env.API_BASE_URL || 'http://localhost:3006';
     const response = await axios.post(`${baseURL}/send-message-bot`, {
       numero: telefono,
       texto: mensaje

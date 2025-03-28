@@ -2,7 +2,7 @@
 module.exports = {
   apps : [
       {
-        name: "bot-3004",
+        name: "bot-3006",
         script: "./app.js",
         instances: 1,
         exec_mode: "cluster", 
