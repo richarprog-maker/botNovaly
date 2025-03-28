@@ -116,6 +116,8 @@ ${clienteYaRegistrado ? '**Nota: Ya estás registrado en nuestro sistema. Solo n
 module.exports = {
   getResponseText: async (type, message, sender) => {
     try {
+      console.log("Mensaje recibido:", message);
+      console.log("Sender:", sender);
       return await processWithOpenAI(message, sender, null);
     } catch (error) {
       console.error("Error:", error);

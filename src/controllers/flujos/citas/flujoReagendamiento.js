@@ -1,6 +1,7 @@
 const { obtenerDetallesUltimaCita } = require('./db/ultimasCitas.js');
 const { getConnection } = require('../../../config/dbConnection');
 const { determinarTipoReunionId } = require('./flujoCitas.js');
+const { notificarAsesoresPorWhatsApp } = require('./whatsappService.js');
 
 
 
@@ -89,6 +90,10 @@ async function actualizarCita(citaId, datosCita) {
       updates.push('asesor_id = ?');
       params.push(datosCita.asesor_id);
     }
+    
+    // Actualizar el estado de la cita a 'reagendada'
+    updates.push('estado = ?');
+    params.push('reagendada');
     
     // Si no hay nada que actualizar, retornar
     if (updates.length === 0) {
@@ -181,6 +186,41 @@ async function procesarReagendamientoOpenAI(response, state, sender) {
       let horaMostrar = datosReagendamiento.hora || ultimaCita.hora_reunion;
       if (horaMostrar.includes(':')) {
         horaMostrar = horaMostrar.substring(0, 5);
+      }
+      
+      // Obtener datos del cliente para la notificación
+      const datosCliente = {
+        nombre_cliente: ultimaCita.nombre_cliente,
+        nombre_empresa: ultimaCita.nombre_empresa,
+        correo_cliente: ultimaCita.correo_cliente,
+        telefono_cliente: sender
+      };
+      
+      // Preparar datos de la cita para la notificación
+      const datosCitaNotificacion = {
+        fecha_reunion: datosActualizacion.fecha_reunion,
+        hora_reunion: datosActualizacion.hora_reunion,
+        tiporeunion_id: tipoReunionId,
+        direccion: datosActualizacion.direccion
+      };
+      
+      // Si hay un asesor asignado, notificarle sobre el reagendamiento
+      if (ultimaCita.asesor_id) {
+        const listaAsesores = [{
+          asesor_id: ultimaCita.asesor_id,
+          nombre_asesor: ultimaCita.nombre_asesor,
+          correo_asesor: ultimaCita.correo_asesor,
+          telefono_asesor: ultimaCita.telefono_asesor
+        }];
+        
+        // Enviar notificación al asesor (no esperamos la respuesta para no bloquear)
+        notificarAsesoresPorWhatsApp(datosCitaNotificacion, datosCliente, listaAsesores, true)
+          .then(resultado => {
+            console.log('Resultado de notificación de reagendamiento:', resultado);
+          })
+          .catch(error => {
+            console.error('Error al notificar reagendamiento:', error);
+          });
       }
       
       return cleanResponse.substring(0, reagendamientoIndex).trim() + 

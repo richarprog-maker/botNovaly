@@ -121,7 +121,7 @@ async function obtenerCitasParaRecordatorio(minutosAntes) {
       SELECT c.*, cl.nombre_cliente, cl.correo_cliente, cl.nombre_empresa, cl.telefono_cliente
       FROM tbl_citas c
       JOIN tbl_clientes cl ON c.cliente_id = cl.cliente_id
-      WHERE c.estado = 'pendiente'
+      WHERE (c.estado = 'pendiente' OR c.estado = 'reagendada')
       AND c.fecha_reunion = ?
     `;
 
