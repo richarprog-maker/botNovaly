@@ -116,8 +116,8 @@ const guardarCita = async (cita) => {
         
         connection = await getConnection();
         const query = `
-            INSERT INTO tbl_citas (cliente_id, asesor_id, tiporeunion_id, fecha_reunion, hora_reunion, direccion)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO tbl_citas (cliente_id, asesor_id, tiporeunion_id, fecha_reunion, hora_reunion, direccion, vinculo_reunion)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `;
         const [result] = await connection.query(query, [
             cita.cliente_id,
@@ -125,7 +125,8 @@ const guardarCita = async (cita) => {
             cita.tiporeunion_id,
             fechaReunion,
             horaReunion,
-            cita.direccion
+            cita.direccion,
+            cita.vinculo_reunion || null
         ]);
         return result.affectedRows > 0
             ? { success: true, message: "¡Cita agendada exitosamente!", cita_id: result.insertId }

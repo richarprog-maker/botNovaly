@@ -10,6 +10,12 @@ require('dotenv').config();
 function generarContenidoMensaje(datosCita, datosCliente, esReagendamiento = false) {
   const tipoReunion = datosCita.tiporeunion_id === 1 ? 'Virtual' : 'Presencial';
   const direccion = datosCita.direccion || 'No especificada';
+  // Verificar si existe enlace_reunion (desde flujoCitas.js) o vinculo_reunion (desde la base de datos)
+  const vinculoReunion = datosCita.enlace_reunion || datosCita.vinculo_reunion || 'No disponible';
+  
+  // Agregar log para depuración
+  console.log('Datos de la cita en generarContenidoMensaje:', JSON.stringify(datosCita, null, 2));
+  console.log('Enlace de reunión a enviar:', vinculoReunion);
   
   if (esReagendamiento) {
     return `Hola 👋
@@ -23,7 +29,7 @@ Una cita ha sido reagendada. Aquí están los nuevos detalles:
 📍 Modalidad: ${tipoReunion}
 ✉️ Correo del cliente: ${datosCliente.correo_cliente || 'No especificado'}
 📞 Teléfono del cliente: ${datosCliente.telefono_cliente}
-${tipoReunion === 'Presencial' ? `✅ Dirección: ${direccion}` : ''}`;
+${tipoReunion === 'Presencial' ? `✅ Dirección: ${direccion}` : `🔗 Enlace de reunión: ${vinculoReunion}`}`;
   }
   
   return `Hola 👋
@@ -37,7 +43,7 @@ Se ha agendado una nueva reunión con un cliente. Aquí están los detalles:
 📍 Modalidad: ${tipoReunion}
 ✉️ Correo del cliente: ${datosCliente.correo_cliente || 'No especificado'}
 📞 Teléfono del cliente: ${datosCliente.telefono_cliente}
-${tipoReunion === 'Presencial' ? `✅ Dirección: ${direccion}` : ''}`;
+${tipoReunion === 'Presencial' ? `✅ Dirección: ${direccion}` : `🔗 Enlace de reunión: ${vinculoReunion}`}`;
 }
 
 /**

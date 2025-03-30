@@ -4,7 +4,7 @@ const { guardarCliente, guardarCita, obtenerAsesores } = require('./db/appointme
 const { obtenerFechaHoraActual } = require('./validacionesFechaHora.js');
 const { obtenerDetallesUltimaCita } = require('./db/ultimasCitas.js');
 const { notificarAsesoresPorWhatsApp } = require('./whatsappService.js');
-const { enviarCorreoConfirmacion, crearReunionYEnviarInvitacion } = require('./emailService.js');
+const { enviarCorreoConfirmacion, crearReunionYEnviarInvitacion, generarEnlaceJitsiSinAutenticacion } = require('./emailService.js');
 
 function generarPromptDatosRegistro(clienteYaRegistrado) {
   // Si el cliente ya está registrado, solo solicitar datos de la cita
@@ -165,11 +165,23 @@ async function procesarRespuestaOpenAI(response, state, sender) {
     // Determinar tipo de reunión y guardar cita
     const tipoReunionId = determinarTipoReunionId(state.datosParciales.datosCita.tipoReunion);
     
+    // Generar enlace de reunión virtual si es necesario
+    let vinculoReunion = null;
+    if (tipoReunionId === 1) { // Si es reunión virtual
+      const reunionId = `cita-${Date.now()}`;
+      const resultadoEnlace = await generarEnlaceJitsiSinAutenticacion(reunionId, false);
+      if (resultadoEnlace.success) {
+        vinculoReunion = resultadoEnlace.enlace_reunion;
+        console.log("Enlace de reunión virtual generado:", vinculoReunion);
+      }
+    }
+    
     console.log("Guardando cita con datos:", {
       cliente_id: clienteId,
       tiporeunion_id: tipoReunionId,
       fecha_reunion: state.datosParciales.datosCita.fecha,
-      hora_reunion: state.datosParciales.datosCita.hora
+      hora_reunion: state.datosParciales.datosCita.hora,
+      vinculo_reunion: vinculoReunion
     });
     
     const citaResult = await guardarCita({
@@ -178,7 +190,8 @@ async function procesarRespuestaOpenAI(response, state, sender) {
       tiporeunion_id: tipoReunionId,
       fecha_reunion: state.datosParciales.datosCita.fecha, 
       hora_reunion: state.datosParciales.datosCita.hora,
-      direccion: state.datosParciales.datosCita.direccion || datosCita.tienda || 'Lima'
+      direccion: state.datosParciales.datosCita.direccion || datosCita.tienda || 'Lima',
+      vinculo_reunion: vinculoReunion
     });
     
     if (!citaResult.success) {
@@ -202,7 +215,8 @@ async function procesarRespuestaOpenAI(response, state, sender) {
       fecha_reunion: state.datosParciales.datosCita.fecha,
       hora_reunion: state.datosParciales.datosCita.hora,
       direccion: state.datosParciales.datosCita.direccion || datosCita.tienda || 'Lima',
-      cita_id: citaResult.cita_id
+      cita_id: citaResult.cita_id,
+      enlace_reunion: vinculoReunion
     };
     
     try {
@@ -254,8 +268,11 @@ async function procesarRespuestaOpenAI(response, state, sender) {
     
     state.citaGuardada = true;
 
-    return cleanResponse.substring(0, citaIndex).trim() + 
-      `\n¡Tu cita ha sido confirmada para el ${state.datosParciales.datosCita.fecha} a las ${state.datosParciales.datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
+    const mensajeConfirmacion = tipoReunionId === 1 && vinculoReunion
+      ? `\n¡Tu cita ha sido confirmada para el ${state.datosParciales.datosCita.fecha} a las ${state.datosParciales.datosCita.hora}!\n\nEnlace para tu reunión virtual: ${vinculoReunion}\n\nNos pondremos en contacto contigo pronto.`
+      : `\n¡Tu cita ha sido confirmada para el ${state.datosParciales.datosCita.fecha} a las ${state.datosParciales.datosCita.hora}! Nos pondremos en contacto contigo pronto.`;
+    
+    return cleanResponse.substring(0, citaIndex).trim() + mensajeConfirmacion;
   } catch (error) {
     console.error("Error al parsear JSON o guardar cita:", error);
     return cleanResponse.substring(0, citaIndex).trim() + 
