@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS tbl_citas (
     fecha_reunion DATE NOT NULL,
     hora_reunion TIME NOT NULL,
     direccion VARCHAR(255),
+    vinculo_reunion VARCHAR(255),
     estado VARCHAR(20) DEFAULT 'pendiente',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

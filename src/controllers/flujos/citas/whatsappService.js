@@ -58,11 +58,23 @@ async function enviarNotificacionWhatsApp(datosCita, datosCliente, datosAsesor, 
     // Enviar el mensaje usando el endpoint existente
     // Usamos la URL completa del servidor en lugar de una ruta relativa
     const baseURL = process.env.API_BASE_URL || 'http://localhost:3006';
+    
+    // Verificar si la URL base está configurada
+    if (!process.env.API_BASE_URL) {
+      console.warn('ADVERTENCIA: API_BASE_URL no está configurada en el archivo .env. Usando valor por defecto:', baseURL);
+    }
+    
+    console.log(`Intentando enviar mensaje WhatsApp a ${telefono} usando endpoint: ${baseURL}/send-message-bot`);
+    
     const response = await axios.post(`${baseURL}/send-message-bot`, {
       numero: telefono,
       texto: mensaje
     });
-    response;
+    
+    // Verificar la respuesta
+    if (response.data && response.data.success === false) {
+      throw new Error(`Error del servidor de WhatsApp: ${response.data.message || 'Sin detalles'}`); 
+    }
     console.log(`Notificación WhatsApp enviada exitosamente al asesor ${datosAsesor.nombre_asesor}`);
     return {
       success: true,

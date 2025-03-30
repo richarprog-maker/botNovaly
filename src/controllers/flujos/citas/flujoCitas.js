@@ -4,6 +4,7 @@ const { guardarCliente, guardarCita, obtenerAsesores } = require('./db/appointme
 const { obtenerFechaHoraActual } = require('./validacionesFechaHora.js');
 const { obtenerDetallesUltimaCita } = require('./db/ultimasCitas.js');
 const { notificarAsesoresPorWhatsApp } = require('./whatsappService.js');
+const { enviarCorreoConfirmacion, crearReunionYEnviarInvitacion } = require('./emailService.js');
 
 function generarPromptDatosRegistro(clienteYaRegistrado) {
   // Si el cliente ya está registrado, solo solicitar datos de la cita
@@ -217,6 +218,32 @@ async function procesarRespuestaOpenAI(response, state, sender) {
         );
         
         console.log("Resultado de notificaciones WhatsApp:", resultadoNotificacion.message);
+        
+        // Obtener el asesor asignado para el correo
+        const asesorAsignado = listaAsesores.find(asesor => asesor.asesor_id === (datosCita.asesorId || 1)) || listaAsesores[0];
+        
+        // Enviar correo de confirmación
+        try {
+          // Determinar si es reunión virtual para decidir qué función usar
+          if (tipoReunionId === 1) { // Reunión virtual
+            const resultadoCorreo = await crearReunionYEnviarInvitacion(
+              datosCitaNotificacion,
+              datosCliente,
+              asesorAsignado
+            );
+            console.log("Resultado de envío de invitación con enlace virtual:", resultadoCorreo.success ? "Exitoso" : "Fallido");
+          } else { // Reunión presencial
+            const resultadoCorreo = await enviarCorreoConfirmacion(
+              datosCitaNotificacion,
+              datosCliente,
+              asesorAsignado
+            );
+            console.log("Resultado de envío de correo de confirmación:", resultadoCorreo.success ? "Exitoso" : "Fallido");
+          }
+        } catch (emailError) {
+          // Solo registrar el error, no interrumpir el flujo
+          console.error("Error al enviar correo de confirmación:", emailError.message);
+        }
       } else {
         console.log("No se encontraron asesores para notificar");
       }

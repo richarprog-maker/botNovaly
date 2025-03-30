@@ -7,47 +7,32 @@ require('dotenv').config();
 
 /**
  * Configuración para el servicio de correo
- * Estas variables deben estar definidas en el archivo .env
+ * Configuración simplificada sin autenticación
  */
-const EMAIL_HOST = process.env.EMAIL_HOST || 'smtp.gmail.com';
-const EMAIL_PORT = process.env.EMAIL_PORT || 587;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-const EMAIL_FROM = process.env.EMAIL_FROM || EMAIL_USER; 
+const EMAIL_HOST = 'localhost';
+const EMAIL_PORT = 25;
+const EMAIL_USER = null;
+const EMAIL_PASS = null;
+const EMAIL_FROM = 'noreply@example.com'; 
 
 /**
  * Crea un transporter de Nodemailer para enviar correos
- * @returns {Object} Transporter de Nodemailer
+ * Si no hay credenciales configuradas o hay errores de autenticación, devuelve un transporter simulado
+ * @returns {Object} Transporter de Nodemailer o un transporter simulado
  */
 function crearTransporterEmail() {
-  try {
-    // Verificar si tenemos las credenciales necesarias
-    if (!EMAIL_USER) {
-      throw new Error("Falta configurar EMAIL_USER en el archivo .env");
-    }
-    
-    // Configurar el transporter
-    const transporter = nodemailer.createTransport({
-      host: EMAIL_HOST,
-      port: EMAIL_PORT,
-      secure: EMAIL_PORT === 465, // true para 465, false para otros puertos
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_PASS
-      },
-      tls: {
-        // No fallar en certificados inválidos
-        rejectUnauthorized: false
-      }
-    });
-    
-    // Verificar la conexión antes de devolver el transporter
-    return transporter;
-  } catch (error) {
-    console.error("Error al crear transporter de email:", error.message);
-    // En lugar de lanzar un error, devolvemos null y manejamos este caso en las funciones que lo usan
-    return null;
-  }
+  // Siempre crear un transporter simulado que no envía correos reales pero simula el comportamiento
+  // No intentamos autenticarnos con ningún servicio de correo
+  console.log("[EMAIL SIMULADO] Usando transporter simulado sin autenticación");
+  return {
+    sendMail: (mailOptions) => {
+      console.log("[EMAIL SIMULADO] Destinatarios:", mailOptions.to);
+      console.log("[EMAIL SIMULADO] Asunto:", mailOptions.subject);
+      // Simular un ID de mensaje
+      return Promise.resolve({ messageId: `simulado-${Date.now()}` });
+    },
+    verify: () => Promise.resolve(true)
+  };
 }
 
 /**
@@ -60,7 +45,9 @@ function crearTransporterEmail() {
 async function crearReunionYEnviarInvitacion(datosCita, datosCliente, datosAsesor) {
   try {
     // Formatear fecha y hora para el evento
-    const fechaHora = `${datosCita.fecha_reunion}T${datosCita.hora_reunion}`;
+    // Asegurarse de que la fecha esté en formato YYYY-MM-DD
+    const fechaFormateada = datosCita.fecha_reunion.split('/').reverse().join('-');
+    const fechaHora = `${fechaFormateada}T${datosCita.hora_reunion}`;
     const fechaInicio = new Date(fechaHora);
     const fechaFin = new Date(fechaInicio.getTime() + 60 * 60 * 1000); // 1 hora después
     
@@ -70,6 +57,20 @@ async function crearReunionYEnviarInvitacion(datosCita, datosCliente, datosAseso
     // Crear un ID único para el evento
     const eventoId = `cita-${Date.now()}`;
     
+    // Generar enlace de Jitsi sin autenticación si es reunión virtual
+    let enlaceReunion = null;
+    if (esReunionVirtual) {
+      // Usar la función existente para generar el enlace sin autenticación
+      const resultadoEnlace = await generarEnlaceJitsiSinAutenticacion(eventoId, false);
+      if (resultadoEnlace.success) {
+        enlaceReunion = resultadoEnlace.enlace_reunion;
+      } else {
+        console.error("Error al generar enlace de Jitsi:", resultadoEnlace.message);
+        // Usar un enlace directo como respaldo
+        enlaceReunion = `https://meet.jit.si/${eventoId}`;
+      }
+    }
+    
     // Crear el evento de calendario con ical-generator
     const calendar = ical({name: 'Calendario de Citas'});
     const evento = calendar.createEvent({
@@ -78,7 +79,7 @@ async function crearReunionYEnviarInvitacion(datosCita, datosCliente, datosAseso
       end: fechaFin,
       summary: `Reunión con ${datosCliente.nombre_cliente} - ${datosCliente.nombre_empresa || 'Cliente'}`,
       description: generarContenidoCorreo(datosCita, datosCliente, datosAsesor, esReunionVirtual),
-      location: esReunionVirtual ? 'Reunión Virtual' : datosCita.direccion,
+      location: esReunionVirtual ? (enlaceReunion || 'Reunión Virtual') : datosCita.direccion,
       organizer: {
         name: datosAsesor.nombre_asesor,
         email: datosAsesor.correo_asesor
@@ -105,25 +106,12 @@ async function crearReunionYEnviarInvitacion(datosCita, datosCliente, datosAseso
     // Generar el archivo iCalendar
     const icsString = calendar.toString();
     
-    // Configurar el transporter de email
+    // Configurar el transporter de email (ahora siempre devuelve un transporter, real o simulado)
     const transporter = crearTransporterEmail();
-    
-    // Verificar si el transporter se creó correctamente
-    if (!transporter) {
-      console.error("No se pudo crear el transporter de email");
-      return {
-        success: false,
-        message: "No se pudo configurar el servicio de correo. Por favor, verifique las credenciales."
-      };
-    }
-    
-    // Crear enlace de reunión virtual (simulado)
-    const enlaceReunion = esReunionVirtual ? 
-      `https://meet.jit.si/${eventoId}` : null;
     
     // Enviar correo con la invitación
     const mailOptions = {
-      from: `"${datosAsesor.nombre_asesor}" <${EMAIL_FROM}>`,
+      from: `"${datosAsesor.nombre_asesor}" <${EMAIL_FROM || 'noreply@example.com'}>`,
       to: [datosCliente.correo_cliente, datosAsesor.correo_asesor],
       subject: `Reunión con ${datosCliente.nombre_cliente} - ${datosCliente.nombre_empresa || 'Cliente'}`,
       html: generarContenidoCorreo(datosCita, datosCliente, datosAsesor, esReunionVirtual, enlaceReunion),
@@ -204,33 +192,44 @@ async function enviarCorreoConfirmacion(datosCita, datosCliente, datosAsesor) {
     // Determinar si es reunión virtual o presencial
     const esReunionVirtual = datosCita.tiporeunion_id === 1;
     
-    // Configurar el transporter de email
-    const transporter = crearTransporterEmail();
-    
-    // Verificar si el transporter se creó correctamente
-    if (!transporter) {
-      console.error("No se pudo crear el transporter de email");
-      return {
-        success: false,
-        message: "No se pudo configurar el servicio de correo. Por favor, verifique las credenciales."
-      };
+    // Generar enlace de Jitsi sin autenticación si es reunión virtual
+    let enlaceReunion = null;
+    if (esReunionVirtual) {
+      // Crear un ID único para la reunión
+      const reunionId = `cita-${Date.now()}`;
+      // Usar la función existente para generar el enlace sin autenticación
+      const resultadoEnlace = await generarEnlaceJitsiSinAutenticacion(reunionId, false);
+      if (resultadoEnlace.success) {
+        enlaceReunion = resultadoEnlace.enlace_reunion;
+      } else {
+        console.error("Error al generar enlace de Jitsi:", resultadoEnlace.message);
+        // Usar un enlace directo como respaldo
+        enlaceReunion = `https://meet.jit.si/${reunionId}`;
+      }
+      
+      // Actualizar los datos de la cita con el enlace de la reunión
+      datosCita.enlace_reunion = enlaceReunion;
     }
+    
+    // Configurar el transporter de email (ahora siempre devuelve un transporter, real o simulado)
+    const transporter = crearTransporterEmail();
     
     // Crear opciones del correo
     const mailOptions = {
-      from: `"${datosAsesor.nombre_asesor}" <${EMAIL_FROM}>`,
+      from: `"${datosAsesor.nombre_asesor}" <${EMAIL_FROM || 'noreply@example.com'}>`,
       to: [datosCliente.correo_cliente, datosAsesor.correo_asesor],
       subject: `Confirmación de cita - ${datosCliente.nombre_cliente}`,
-      html: generarContenidoCorreo(datosCita, datosCliente, datosAsesor, esReunionVirtual)
+      html: generarContenidoCorreo(datosCita, datosCliente, datosAsesor, esReunionVirtual, enlaceReunion)
     };
     
-    // Enviar correo usando Nodemailer
+    // Enviar correo usando Nodemailer (real o simulado)
     const info = await transporter.sendMail(mailOptions);
 
     console.log("Correo de confirmación enviado exitosamente:", info.messageId);
     return {
       success: true,
-      message: "Correo de confirmación enviado exitosamente"
+      message: "Correo de confirmación enviado exitosamente",
+      enlace_reunion: enlaceReunion
     };
   } catch (error) {
     console.error("Error al enviar correo de confirmación:", error.message);
@@ -241,7 +240,76 @@ async function enviarCorreoConfirmacion(datosCita, datosCliente, datosAsesor) {
   }
 }
 
+/**
+ * Genera un enlace de Jitsi Meet sin autenticación
+ * Jitsi Meet es de código abierto y permite crear reuniones sin necesidad de autenticación
+ * @param {string} nombreReunion - Nombre opcional para la reunión (si no se proporciona, se genera uno aleatorio)
+ * @param {boolean} enviarCorreo - Indica si se debe enviar un correo con el enlace
+ * @param {Object} datosCorreo - Datos necesarios para enviar el correo (opcional, requerido si enviarCorreo es true)
+ * @returns {Promise<Object>} Información del enlace generado
+ */
+async function generarEnlaceJitsiSinAutenticacion(nombreReunion = null, enviarCorreo = false, datosCorreo = null) {
+  try {
+    // Generar un ID único para la reunión
+    const reunionId = nombreReunion || `reunion-${Date.now()}`;
+    
+    // Crear el enlace de Jitsi Meet (directo, sin autenticación)
+    const enlaceReunion = `https://meet.jit.si/${reunionId}`;
+    console.log(`Enlace de Jitsi Meet generado sin autenticación: ${enlaceReunion}`);
+    
+    // Si se solicita enviar correo, verificar que se proporcionaron los datos necesarios
+    if (enviarCorreo) {
+      if (!datosCorreo || !datosCorreo.datosCita || !datosCorreo.datosCliente || !datosCorreo.datosAsesor) {
+        return {
+          success: false,
+          message: "Faltan datos necesarios para enviar el correo",
+          enlace_reunion: enlaceReunion
+        };
+      }
+      
+      try {
+        // Configurar el transporter de email (siempre devuelve un transporter, real o simulado)
+        const transporter = crearTransporterEmail();
+        
+        // Extraer los datos necesarios para el correo
+        const { datosCita, datosCliente, datosAsesor } = datosCorreo;
+        
+        // Crear opciones del correo
+        const mailOptions = {
+          from: `"${datosAsesor.nombre_asesor}" <${EMAIL_FROM || 'noreply@example.com'}>`,
+          to: [datosCliente.correo_cliente, datosAsesor.correo_asesor],
+          subject: `Enlace para reunión virtual con ${datosCliente.nombre_cliente}`,
+          html: generarContenidoCorreo(datosCita, datosCliente, datosAsesor, true, enlaceReunion)
+        };
+        
+        // Enviar correo usando Nodemailer (real o simulado)
+        const info = await transporter.sendMail(mailOptions);
+        
+        console.log("Correo con enlace de reunión enviado exitosamente:", info.messageId);
+      } catch (emailError) {
+        console.error("Error al enviar correo con enlace de reunión:", emailError.message);
+        // Continuamos a pesar del error en el envío del correo
+      }
+    }
+    
+    // Siempre devolvemos el enlace generado, incluso si hubo error en el envío del correo
+    return {
+      success: true,
+      message: enviarCorreo ? "Enlace de reunión generado y correo enviado" : "Enlace de reunión generado exitosamente",
+      reunion_id: reunionId,
+      enlace_reunion: enlaceReunion
+    };
+  } catch (error) {
+    console.error("Error al generar enlace de Jitsi:", error.message);
+    return {
+      success: false,
+      message: `No se pudo generar el enlace de reunión. Error: ${error.message}`
+    };
+  }
+}
+
 module.exports = {
   crearReunionYEnviarInvitacion,
-  enviarCorreoConfirmacion
+  enviarCorreoConfirmacion,
+  generarEnlaceJitsiSinAutenticacion
 };

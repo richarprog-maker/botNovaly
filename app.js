@@ -46,12 +46,12 @@ const main = async () => {
     server.start();
     
     // Iniciar el servicio de recordatorios de citas
-    try {
-        const resultadoRecordatorios = iniciarServicioRecordatorios();
-        console.log(resultadoRecordatorios.message);
-    } catch (error) {
-        console.error("Error al iniciar el servicio de recordatorios:", error.message);
-    }
+    // try {
+    //     const resultadoRecordatorios = iniciarServicioRecordatorios();
+    //     console.log(resultadoRecordatorios.message);
+    // } catch (error) {
+    //     console.error("Error al iniciar el servicio de recordatorios:", error.message);
+    // }
 
 }
 QRPortal({ port: 4001 });
