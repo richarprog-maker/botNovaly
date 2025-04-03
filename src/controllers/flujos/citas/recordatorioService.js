@@ -7,10 +7,9 @@ function formatearFecha(fechaStr) {
   if (!fechaStr) return 'No especificada';
   
   try {
-    const partes = fechaStr.split('-');
-    if (partes.length !== 3) return fechaStr;
-    
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    const fecha = new Date(fechaStr);
+    const opciones = { weekday: 'short', month: 'short', year: 'numeric' };
+    return fecha.toLocaleDateString('es-ES', opciones);
   } catch (error) {
     console.error('Error al formatear fecha:', error);
     return fechaStr;
@@ -237,9 +236,15 @@ function iniciarServicioRecordatorios() {
     await procesarRecordatoriosCitas(60, "una hora");
   }, 5 * 60 * 1000); // Verificar cada 5 minutos
   
+  // Programar recordatorios de 15 minutos antes
+  setInterval(async () => {
+    // console.log("Verificando citas para recordatorios de 15 minutos...");
+    await procesarRecordatoriosCitas(15, "15 minutos");
+  }, 1 * 60 * 1000); // Verificar cada minuto
+  
   // Programar recordatorios de 5 minutos antes
-   setInterval(async () => {
-  //   console.log("Verificando citas para recordatorios de 5 minutos...");
+  setInterval(async () => {
+    // console.log("Verificando citas para recordatorios de 5 minutos...");
     await procesarRecordatoriosCitas(5, "5 minutos");
   }, 1 * 60 * 1000); // Verificar cada minuto
   

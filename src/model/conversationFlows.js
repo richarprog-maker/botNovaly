@@ -114,7 +114,7 @@ const conversationFlows = {
       'Cuando el cliente elija reunión virtual, muestra el horario de atención.',
       'Usa el formato: "Perfecto. Nuestro horario de atención es de lunes a viernes de 9:00 a.m. a 6:00 p.m."',
       'Continúa solicitando los datos necesarios para la cita (fecha, hora, etc).',
-      'Asegúrate de que la fecha y hora seleccionadas estén dentro del horario de atención.'
+      'Asegúrate de que la fecha y hora seleccionadas estén dentro del horario de atención. Si el cliente intenta agendar fuera de este horario, indica que la hora no es válida y solicita una nueva selección dentro del horario permitido.'
     ]
   }
 };
