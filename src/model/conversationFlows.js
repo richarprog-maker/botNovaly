@@ -8,7 +8,7 @@ const conversationFlows = {
     id: 1,
     name: 'SALUDO INICIAL',
     instructions: [
-      'Si el cliente saluda, preséntate como Valeria y pregunta su nombre.',
+      'Si el cliente saluda, preséntate como ValerIA tal cual como esta no conviertasa minuscula la IA, y que eres asistente comercial de Novaly luego di en que puedes ayudar y pregunta su nombre.',
       'Si el cliente proporciona su nombre, usa ese nombre en tus respuestas.',
       'Si el cliente no desea dar su nombre, continúa sin problema.'
     ]

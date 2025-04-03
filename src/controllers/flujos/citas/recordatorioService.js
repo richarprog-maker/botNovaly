@@ -100,6 +100,10 @@ async function enviarRecordatorioCita(datosCita, datosCliente, tiempoAntes) {
 }
 
 
+// Objeto para almacenar las citas a las que ya se les ha enviado recordatorio
+// La clave es cita_id + minutosAntes (para diferenciar entre recordatorios de 60 y 5 minutos)
+const recordatoriosEnviados = {};
+
 async function obtenerCitasParaRecordatorio(minutosAntes) {
   let connection;
   try {
@@ -135,10 +139,14 @@ async function obtenerCitasParaRecordatorio(minutosAntes) {
       const minutosReunion = parseInt(horaReunionPartes[0]) * 60 + parseInt(horaReunionPartes[1]);
       const diferencia = minutosReunion - minutosActuales;
       
+      // Crear una clave única para esta cita y tipo de recordatorio
+      const citaKey = `${cita.cita_id}_${minutosAntes}`;
+      
       console.log(`Cita ID ${cita.cita_id}: Hora reunión: ${cita.hora_reunion} (${minutosReunion} min), ` +
                  `Hora actual: ${horaActual} (${minutosActuales} min), Diferencia: ${diferencia} min`);
       
-      return diferencia >= minutosAntes-0.5 && diferencia <= minutosAntes+0.5;
+      // Verificar si la cita está en el rango correcto Y no se ha enviado recordatorio aún
+      return diferencia >= minutosAntes-0.5 && diferencia <= minutosAntes+0.5 && !recordatoriosEnviados[citaKey];
     });
     
     console.log(`De las ${rows.length} citas pendientes, ${citasFiltradas.length} cumplen con el criterio de estar a ${minutosAntes} minutos de la hora actual`);
@@ -164,7 +172,7 @@ async function procesarRecordatoriosCitas(minutosAntes, mensajeRecordatorio) {
     const citasProximas = await obtenerCitasParaRecordatorio(minutosAntes);
     
     if (citasProximas.length === 0) {
-      console.log(`No hay citas próximas para enviar recordatorios de ${mensajeRecordatorio}.`);
+      // console.log(`No hay citas próximas para enviar recordatorios de ${mensajeRecordatorio}.`);
       return {
         success: true,
         message: `No hay citas próximas para enviar recordatorios de ${mensajeRecordatorio}.`,
@@ -196,6 +204,9 @@ async function procesarRecordatoriosCitas(minutosAntes, mensajeRecordatorio) {
       });
       
       if (resultado.success) {
+        // Marcar esta cita como procesada para este tipo de recordatorio
+        const citaKey = `${cita.cita_id}_${minutosAntes}`;
+        recordatoriosEnviados[citaKey] = true;
         recordatoriosExitosos++;
       }
     }
@@ -207,7 +218,7 @@ async function procesarRecordatoriosCitas(minutosAntes, mensajeRecordatorio) {
       resultados: resultados
     };
   } catch (error) {
-    console.error(`Error al procesar recordatorios de ${mensajeRecordatorio}:`, error.message);
+    // console.error(`Error al procesar recordatorios de ${mensajeRecordatorio}:`, error.message);
     return {
       success: false,
       message: `Error al procesar recordatorios de ${mensajeRecordatorio}: ${error.message}`,
@@ -222,13 +233,13 @@ function iniciarServicioRecordatorios() {
   
   // Programar recordatorios de 1 hora antes
   setInterval(async () => {
-    console.log("Verificando citas para recordatorios de una hora...");
+    // console.log("Verificando citas para recordatorios de una hora...");
     await procesarRecordatoriosCitas(60, "una hora");
   }, 5 * 60 * 1000); // Verificar cada 5 minutos
   
   // Programar recordatorios de 5 minutos antes
-  setInterval(async () => {
-    console.log("Verificando citas para recordatorios de 5 minutos...");
+   setInterval(async () => {
+  //   console.log("Verificando citas para recordatorios de 5 minutos...");
     await procesarRecordatoriosCitas(5, "5 minutos");
   }, 1 * 60 * 1000); // Verificar cada minuto
   
