@@ -22,7 +22,7 @@ const guardarCliente = async (cliente) => {
         if (connection) {
             try {
                 await connection.release();
-                console.log("Conexión liberada en guardarCliente");
+                // console.log("Conexión liberada en guardarCliente");
             } catch (releaseError) {
                 console.error("Error al liberar conexión en guardarCliente:", releaseError);
             }
@@ -52,7 +52,7 @@ const guardarAsesor = async (asesor) => {
         if (connection) {
             try {
                 await connection.release();
-                console.log("Conexión liberada en guardarAsesor");
+                // console.log("Conexión liberada en guardarAsesor");
             } catch (releaseError) {
                 console.error("Error al liberar conexión en guardarAsesor:", releaseError);
             }
@@ -138,9 +138,9 @@ const guardarCita = async (cita) => {
         if (connection) {
             try {
                 await connection.release();
-                console.log("Conexión liberada en guardarCita");
+                // console.log("Conexión liberada en guardarCita");
             } catch (releaseError) {
-                console.error("Error al liberar conexión en guardarCita:", releaseError);
+                // console.error("Error al liberar conexión en guardarCita:", releaseError);
             }
         }
     }
@@ -163,7 +163,7 @@ const obtenerTiposReunion = async () => {
         if (connection) {
             try {
                 await connection.release();
-                console.log("Conexión liberada en obtenerTiposReunion");
+                // console.log("Conexión liberada en obtenerTiposReunion");
             } catch (releaseError) {
                 console.error("Error al liberar conexión en obtenerTiposReunion:", releaseError);
             }
@@ -188,7 +188,7 @@ const obtenerAsesores = async () => {
         if (connection) {
             try {
                 await connection.release();
-                console.log("Conexión liberada en obtenerAsesores");
+                // console.log("Conexión liberada en obtenerAsesores");
             } catch (releaseError) {
                 console.error("Error al liberar conexión en obtenerAsesores:", releaseError);
             }

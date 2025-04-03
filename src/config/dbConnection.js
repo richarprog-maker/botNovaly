@@ -14,7 +14,7 @@ const pool = mysql.createPool({
 });
 
 pool.on('acquire', (connection) => {
-    console.log(`[MySQL] Conexión adquirida (ID: ${connection.threadId})`);
+    // console.log(`[MySQL] Conexión adquirida (ID: ${connection.threadId})`);
 });
 
 pool.on('release', (connection) => {
@@ -32,9 +32,9 @@ async function testConnection() {
     let conn;
     try {
         conn = await pool.getConnection();
-        console.log('[MySQL] Conexión exitosa al servidor MySQL');
+         console.log('[MySQL] Conexión exitosa al servidor MySQL');
         await conn.ping();
-        console.log('[MySQL] Ping exitoso');
+        // console.log('[MySQL] Ping exitoso');
     } catch (error) {
         console.error('[MySQL] Error en la prueba de conexión:', error);
     } finally {

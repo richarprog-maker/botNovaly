@@ -74,7 +74,8 @@ const conversationFlows = {
     instructions: [
       'Proporciona detalles sobre el servicio consultado.',
       'Explica los beneficios (centralización, reducción de tiempo, etc).',
-      'Menciona casos de éxito si es relevante.'
+      'Menciona casos de éxito si es relevante.',
+      'Si el cliente solicita más información por tercera vez, sugiere agendar una cita para discutir más detalles.'
     ]
   },
   CONSULTA_SEGURIDAD: {

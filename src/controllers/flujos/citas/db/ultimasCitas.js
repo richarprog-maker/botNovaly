@@ -62,7 +62,7 @@ const obtenerDetallesUltimaCita = async (telefono) => {
         if (conexion) {
             try {
                 await conexion.release();
-                console.log("Conexión liberada en obtenerDetallesUltimaCita");
+                // console.log("Conexión liberada en obtenerDetallesUltimaCita");
             } catch (releaseError) {
                 console.error("Error al liberar conexión en obtenerDetallesUltimaCita:", releaseError);
             }
